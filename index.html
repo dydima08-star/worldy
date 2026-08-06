@@ -203,6 +203,10 @@
     
     .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 100; padding: 20px; }
     .modal { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; width: 100%; max-width: 400px; text-align: center; }
+    /* Твои классы цветов для поля и клавиатуры */
+    .green { background-color: #538d4e !important; color: white !important; border-color: #538d4e !important; }
+    .orange { background-color: #b59f3b !important; color: white !important; border-color: #b59f3b !important; }
+    .gray { background-color: #787c7e !important; color: white !important; border-color: #787c7e !important; }
   </style>
 </head>
 <body>
@@ -1002,41 +1006,39 @@
       grid.style.gridTemplateColumns = `repeat(${wordObj.len}, 1fr)`;
       
       const attempts = wordObj.attempts || [];
-      const keyStates = {};
+      const keyStates = {}; // Храним цвета для клавиатуры
+
+      // Защита: принудительно делаем слово из базы ЗАГЛАВНЫМ
+      const secretWordUpper = wordObj.secret.toUpperCase();
 
       for (let r = 0; r < MAX_ATTEMPTS; r++) {
-        // --- 1. НОВЫЙ АЛГОРИТМ ПРОВЕРКИ ИЗ ТВОЕГО ПРИМЕРА ---
-        let statuses = [];
+        let statuses = Array(wordObj.len).fill('gray'); // По умолчанию всё серое
         let guessLetters = [];
-        
+
         if (attempts[r]) {
           guessLetters = attempts[r].split('');
-          
-          // Принудительно делаем загаданное слово ЗАГЛАВНЫМ (решает баг с базой данных)
-          let targetLetters = wordObj.secret.toUpperCase().split('');
-          statuses = Array(wordObj.len).fill('absent'); // По умолчанию всё серое
+          let targetLetters = secretWordUpper.split('');
 
-          // Первый проход: ищем только ЗЕЛЕНЫЕ (совпадения на своих местах)
+          // ПЕРВЫЙ ПРОХОД: ищем только ЗЕЛЕНЫЕ (на своих местах)
           for (let i = 0; i < wordObj.len; i++) {
             if (guessLetters[i] === targetLetters[i]) {
-              statuses[i] = 'correct';
-              targetLetters[i] = null; // Вычеркиваем букву, чтобы не посчитать дважды
+              statuses[i] = 'green';
+              targetLetters[i] = null;
             }
           }
-          
-          // Второй проход: ищем ОРАНЖЕВЫЕ (буква есть, но не на своем месте)
+
+          // ВТОРОЙ ПРОХОД: ищем ОРАНЖЕВЫЕ (не на своих местах)
           for (let i = 0; i < wordObj.len; i++) {
-            if (statuses[i] === 'correct') continue; // Пропускаем уже зеленые
-            
+            if (statuses[i] === 'green') continue;
             const targetIndex = targetLetters.indexOf(guessLetters[i]);
             if (targetIndex !== -1) {
-              statuses[i] = 'present';
-              targetLetters[targetIndex] = null; // Вычеркиваем найденную букву
+              statuses[i] = 'orange';
+              targetLetters[targetIndex] = null;
             }
           }
         }
 
-        // --- 2. РИСУЕМ КЛЕТКИ ДЛЯ ТЕКУЩЕГО РЯДА ---
+        // Отрисовываем клетки
         for (let c = 0; c < wordObj.len; c++) {
           const tile = document.createElement('div');
           tile.className = 'tile';
@@ -1046,36 +1048,34 @@
           if (attempts[r]) {
             const l = guessLetters[c];
             tile.innerText = l;
-            tile.dataset.state = statuses[c];
+            
+            // ВАЖНО: Добавляем класс напрямую, как в твоем коде!
+            tile.classList.add(statuses[c]);
 
-            // --- 3. ЛОГИКА ПРИОРИТЕТОВ ДЛЯ КЛАВИАТУРЫ ---
-            if (statuses[c] === 'correct') {
-              keyStates[l] = 'correct';
-            } else if (statuses[c] === 'present') {
-              if (keyStates[l] !== 'correct') {
-                keyStates[l] = 'present';
-              }
-            } else if (statuses[c] === 'absent') {
-              if (keyStates[l] !== 'correct' && keyStates[l] !== 'present') {
-                keyStates[l] = 'absent';
-              }
+            // Логика приоритетов для клавиатуры
+            if (statuses[c] === 'green') {
+              keyStates[l] = 'green';
+            } else if (statuses[c] === 'orange') {
+              if (keyStates[l] !== 'green') keyStates[l] = 'orange';
+            } else if (statuses[c] === 'gray') {
+              if (keyStates[l] !== 'green' && keyStates[l] !== 'orange') keyStates[l] = 'gray';
             }
           } else if (r === attempts.length && c < currentInput.length) {
-            // Рисуем буквы, которые игрок вводит ПРЯМО СЕЙЧАС
             tile.innerText = currentInput[c];
           }
           grid.appendChild(tile);
         }
       }
 
-      // --- 4. ПРИМЕНЯЕМ ЦВЕТА К ВИРТУАЛЬНОЙ КЛАВИАТУРЕ ---
+      // Применяем цвета к виртуальной клавиатуре
       document.querySelectorAll('.key').forEach(btn => {
         const k = btn.dataset.key;
+        // Очищаем кнопку от старых цветов
+        btn.classList.remove('green', 'orange', 'gray');
+        
+        // Красим в новый
         if (keyStates[k]) {
-          btn.dataset.state = keyStates[k];
-        } else {
-          // Надежно удаляем статус, чтобы буква оставалась белой
-          btn.removeAttribute('data-state'); 
+          btn.classList.add(keyStates[k]);
         }
       });
     }
@@ -1086,7 +1086,7 @@
       attempts.push(currentInput);
       currentInput = '';
       
-      const isWin = attempts[attempts.length-1] === wordObj.secret;
+      const isWin = attempts[attempts.length-1] === wordObj.secret.toUpperCase();
       const isLose = !isWin && attempts.length >= MAX_ATTEMPTS;
 
       if (isWin || isLose) {
