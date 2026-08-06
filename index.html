@@ -243,7 +243,7 @@
     <button id="btn-daily-word" onclick="startDailyWord()" class="gold" style="background: linear-gradient(45deg, #20bf6b, #0fb9b1); color: white;">
       📅 Слово дня (Ежедневное)
     </button>
-    <button id="btn-go-create" onclick="showScreen(screenCreate)">✏️ Загадать слова (для соперника)</button>
+    <button id="btn-go-create">✏️ Загадать слова (для соперника)</button>
 
     <div class="menu-box">
       <h3>🎯 Доступные слова</h3>
@@ -1005,6 +1005,38 @@
       const keyStates = {};
 
       for (let r = 0; r < MAX_ATTEMPTS; r++) {
+        // --- 1. НОВЫЙ АЛГОРИТМ ПРОВЕРКИ ИЗ ТВОЕГО ПРИМЕРА ---
+        let statuses = [];
+        let guessLetters = [];
+        
+        if (attempts[r]) {
+          guessLetters = attempts[r].split('');
+          
+          // Принудительно делаем загаданное слово ЗАГЛАВНЫМ (решает баг с базой данных)
+          let targetLetters = wordObj.secret.toUpperCase().split('');
+          statuses = Array(wordObj.len).fill('absent'); // По умолчанию всё серое
+
+          // Первый проход: ищем только ЗЕЛЕНЫЕ (совпадения на своих местах)
+          for (let i = 0; i < wordObj.len; i++) {
+            if (guessLetters[i] === targetLetters[i]) {
+              statuses[i] = 'correct';
+              targetLetters[i] = null; // Вычеркиваем букву, чтобы не посчитать дважды
+            }
+          }
+          
+          // Второй проход: ищем ОРАНЖЕВЫЕ (буква есть, но не на своем месте)
+          for (let i = 0; i < wordObj.len; i++) {
+            if (statuses[i] === 'correct') continue; // Пропускаем уже зеленые
+            
+            const targetIndex = targetLetters.indexOf(guessLetters[i]);
+            if (targetIndex !== -1) {
+              statuses[i] = 'present';
+              targetLetters[targetIndex] = null; // Вычеркиваем найденную букву
+            }
+          }
+        }
+
+        // --- 2. РИСУЕМ КЛЕТКИ ДЛЯ ТЕКУЩЕГО РЯДА ---
         for (let c = 0; c < wordObj.len; c++) {
           const tile = document.createElement('div');
           tile.className = 'tile';
@@ -1012,36 +1044,37 @@
           tile.style.height = tile.style.width;
 
           if (attempts[r]) {
-            const l = attempts[r][c];
+            const l = guessLetters[c];
             tile.innerText = l;
-            if (l === wordObj.secret[c]) { 
-              tile.dataset.state = 'correct'; 
-              keyStates[l] = 'correct'; 
-            } else if (wordObj.secret.includes(l)) { 
-              tile.dataset.state = 'present'; 
+            tile.dataset.state = statuses[c];
+
+            // --- 3. ЛОГИКА ПРИОРИТЕТОВ ДЛЯ КЛАВИАТУРЫ ---
+            if (statuses[c] === 'correct') {
+              keyStates[l] = 'correct';
+            } else if (statuses[c] === 'present') {
               if (keyStates[l] !== 'correct') {
-                keyStates[l] = 'present'; 
+                keyStates[l] = 'present';
               }
-            } else { 
-              tile.dataset.state = 'absent'; 
-              if (!keyStates[l]) {
-                keyStates[l] = 'absent'; 
+            } else if (statuses[c] === 'absent') {
+              if (keyStates[l] !== 'correct' && keyStates[l] !== 'present') {
+                keyStates[l] = 'absent';
               }
             }
           } else if (r === attempts.length && c < currentInput.length) {
+            // Рисуем буквы, которые игрок вводит ПРЯМО СЕЙЧАС
             tile.innerText = currentInput[c];
           }
           grid.appendChild(tile);
         }
       }
 
+      // --- 4. ПРИМЕНЯЕМ ЦВЕТА К ВИРТУАЛЬНОЙ КЛАВИАТУРЕ ---
       document.querySelectorAll('.key').forEach(btn => {
         const k = btn.dataset.key;
-        // Если для этой буквы есть статус в попытках — красим
         if (keyStates[k]) {
           btn.dataset.state = keyStates[k];
         } else {
-          // Надежно удаляем статус, чтобы буква снова стала белой
+          // Надежно удаляем статус, чтобы буква оставалась белой
           btn.removeAttribute('data-state'); 
         }
       });
