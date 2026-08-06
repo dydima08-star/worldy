@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
@@ -180,8 +180,26 @@
       border-color: var(--absent-color) !important;
     }
     .key-row { display: flex; justify-content: center; gap: 3px; width: 100%; }
-    .key { background-color: var(--key-bg); color: white; border: none; border-radius: 4px; height: 44px; flex: 1; font-weight: bold; cursor: pointer; }
-    .key.large { flex: 1.5; font-size: 0.75rem; }
+    /* Делаем неиспользованные кнопки белыми с черным текстом */
+.key { 
+  background-color: #ffffff; 
+  color: #000000; 
+  border: none; 
+  border-radius: 4px; 
+  height: 44px; 
+  flex: 1; 
+  font-weight: bold; 
+  cursor: pointer; 
+}
+
+/* Нажатые кнопки делают текст белым */
+.key[data-state="correct"],
+.key[data-state="present"],
+.key[data-state="absent"] {
+  color: #ffffff !important;
+}
+
+.key.large { flex: 1.5; font-size: 0.75rem; background-color: var(--key-bg); color: white; }
     
     .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 100; padding: 20px; }
     .modal { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; width: 100%; max-width: 400px; text-align: center; }
@@ -535,33 +553,47 @@
     const screenShop = document.getElementById('screen-shop');
     
     // Обработчик кнопки перехода к созданию слов
+    // ОДИН единственный обработчик для кнопки отправки слов
     document.getElementById('btn-submit-words').addEventListener('click', () => {
-      // 1. Получаем сегодняшнюю дату
-      const todayStr = new Date().toLocaleDateString();
+      const todayISO = new Date().toISOString().slice(0, 10);
       
-      // 2. Считаем, сколько слов этот игрок УЖЕ загадал сегодня
+      // Считаем, сколько слов этот игрок УЖЕ загадал сегодня
       const myWordsToday = Object.values(globalState?.words || {}).filter(w => 
-        w.author === myRole && w.date === todayStr
+        w.author === myRole && w.date === todayISO
       );
 
-      // 3. Если уже есть 3 слова — блокируем отправку
-      if (myWordsToday.length >= 3) {
-        alert("Лимит исчерпан: можно загадывать максимум 3 слова в день!");
+      // Собираем слова, которые игрок вписал в инпуты сейчас
+      let wordsToAdd = [];
+      [1, 2, 3].forEach(i => {
+        const val = document.getElementById(`word-in-${i}`).value.trim().toUpperCase().replace(/Ё/g, 'Е');
+        if (val && /^[А-Я]+$/.test(val)) {
+          wordsToAdd.push({ val: val, index: i });
+        }
+      });
+
+      // Если игрок пытается отправить больше, чем разрешено (всего 3 в день)
+      if (myWordsToday.length + wordsToAdd.length > 3) {
+        alert(`Лимит исчерпан! Вы уже загадали ${myWordsToday.length} слов(а) сегодня. Можно добавить еще максимум ${3 - myWordsToday.length}.`);
         return;
       }
 
-      [1,2,3].forEach(i => {
-        const val = document.getElementById(`word-in-${i}`).value.trim().toUpperCase().replace(/Ё/g, 'Е');
-        if (val && /^[А-Я]+$/.test(val)) {
-          const ref = gameRef.child('words').push();
-          ref.set({
-            id: ref.key, author: myRole, target: myRole === 1 ? 2 : 1,
-            secret: val, len: val.length, status: 'pending', attempts: [],
-            date: todayStr // <-- ДОБАВИЛИ ДАТУ СОЗДАНИЯ СЛОВА
-          });
-        }
-        document.getElementById(`word-in-${i}`).value = '';
+      // Добавляем слова в базу
+      wordsToAdd.forEach(item => {
+        const ref = gameRef.child('words').push();
+        ref.set({
+          id: ref.key, 
+          author: myRole, 
+          target: myRole === 1 ? 2 : 1,
+          secret: item.val, 
+          len: item.val.length, 
+          status: 'pending', 
+          attempts: [],
+          date: todayISO // Обязательно сохраняем дату!
+        });
+        // Очищаем инпуты
+        document.getElementById(`word-in-${item.index}`).value = '';
       });
+      
       showScreen(screenMenu);
     });
     // БАЗА ИЗ 50 ТОВАРОВ МАГАЗИНА
@@ -716,48 +748,37 @@
 
     // СЛОВА И ИГРА
     function renderWords(wordsObj) {
-      const list = document.getElementById('pending-words-list');
-      list.innerHTML = '';
-      
-      // Получаем сегодняшнюю дату в формате твоего генератора (например, 2026-08-06)
-      const todayISO = new Date().toISOString().slice(0, 10);
+  const list = document.getElementById('pending-words-list');
+  list.innerHTML = '';
+  
+  const todayISO = new Date().toISOString().slice(0, 10);
 
-      // ОЧИСТКА СТАРЫХ СЛОВ ДНЯ
-      for (const key in wordsObj) {
-        const w = wordsObj[key];
-        // Если это ежедневное слово, и в его ID нет сегодняшней даты:
-        if (w.id && w.id.startsWith('daily_') && !w.id.includes(todayISO)) {
-          db.ref(`wordle_season_v1/words/${key}`).remove(); // Удаляем из БД
-          delete wordsObj[key]; // Удаляем из локального объекта, чтобы не рендерилось
-        }
-      }
+  // ОЧИСТКА СТАРЫХ СЛОВ (И системы, и игроков)
+  for (const key in wordsObj) {
+    const w = wordsObj[key];
+    
+    // Флаг для старого системного слова
+    let isOldSystem = w.id && w.id.startsWith('daily_') && !w.id.includes(todayISO);
+    // Флаг для старого слова от игрока (если дата есть, но она не сегодняшняя)
+    let isOldPlayer = w.date && w.date !== todayISO;
 
-      const arr = Object.values(wordsObj).filter(w => w.status === 'pending' && w.target === myRole);
-      
-      if(arr.length === 0) list.innerHTML = '<p style="text-align:center; color:#777; padding:10px;">Нет активных слов от соперника</p>';
-      arr.forEach(w => {
-        const card = document.createElement('div');
-        card.className = 'word-card';
-        card.innerHTML = `<div><b>Слово от ${w.author === 'Система' ? 'Системы' : 'Игрока ' + w.author}</b><br><small>Длина: ${w.len} букв</small></div> <button style="width:auto; margin:0; padding:6px 12px;">Играть</button>`;
-        card.onclick = () => startWord(w.id);
-        list.appendChild(card);
-      });
+    if (isOldSystem || isOldPlayer) {
+      db.ref(`wordle_season_v1/words/${key}`).remove(); // Удаляем из БД
+      delete wordsObj[key]; // Удаляем из локального объекта, чтобы не рендерилось
     }
+  }
 
-    document.getElementById('btn-submit-words').addEventListener('click', () => {
-      [1,2,3].forEach(i => {
-        const val = document.getElementById(`word-in-${i}`).value.trim().toUpperCase().replace(/Ё/g, 'Е');
-        if (val && /^[А-Я]+$/.test(val)) {
-          const ref = gameRef.child('words').push();
-          ref.set({
-            id: ref.key, author: myRole, target: myRole === 1 ? 2 : 1,
-            secret: val, len: val.length, status: 'pending', attempts: []
-          });
-        }
-        document.getElementById(`word-in-${i}`).value = '';
-      });
-      showScreen(screenMenu);
-    });
+  const arr = Object.values(wordsObj).filter(w => w.status === 'pending' && w.target === myRole);
+  
+  if(arr.length === 0) list.innerHTML = '<p style="text-align:center; color:#777; padding:10px;">Нет активных слов от соперника</p>';
+  arr.forEach(w => {
+    const card = document.createElement('div');
+    card.className = 'word-card';
+    card.innerHTML = `<div><b>Слово от ${w.author === 'Система' ? 'Системы' : 'Игрока ' + w.author}</b><br><small>Длина: ${w.len} букв</small></div> <button style="width:auto; margin:0; padding:6px 12px;">Играть</button>`;
+    card.onclick = () => startWord(w.id);
+    list.appendChild(card);
+  });
+}
 
     // ЛОГИКА "СЛОВО ДНЯ"
     function startDailyWord() {
@@ -1016,7 +1037,13 @@
 
       document.querySelectorAll('.key').forEach(btn => {
         const k = btn.dataset.key;
-        if (keyStates[k]) btn.dataset.state = keyStates[k]; else delete btn.dataset.state;
+        // Если для этой буквы есть статус в попытках — красим
+        if (keyStates[k]) {
+          btn.dataset.state = keyStates[k];
+        } else {
+          // Надежно удаляем статус, чтобы буква снова стала белой
+          btn.removeAttribute('data-state'); 
+        }
       });
     }
 
