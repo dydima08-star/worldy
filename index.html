@@ -788,7 +788,7 @@
       }
       const todayStr = new Date().toISOString().slice(0, 10);
       const dayIndex = Math.abs(hashCode(todayStr)) % DAILY_WORDS_POOL.length;
-      const secretWord = DAILY_WORDS_POOL[dayIndex];
+      const secretWord = DAILY_WORDS_POOL[dayIndex].toUpperCase();
       const dailyWordId = `daily_${todayStr}_p${myRole}`;
 
       const wordRef = db.ref(`wordle_season_v1/words/${dailyWordId}`);
