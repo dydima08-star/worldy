@@ -220,6 +220,7 @@
     .tile.selected { border-color: var(--accent-color) !important; box-shadow: 0 0 0 3px rgba(74,144,226,0.45); }
     .tile.cur-filled { border-color: #888; }
     .tile.locked { background-color: var(--correct-color); border-color: var(--correct-color); color:#fff; }
+    .tile.prefill-green { background-color: var(--correct-color); border-color: var(--correct-color); color:#fff; }
 
     /* Убранные (серые) клавиши */
     .key.disabled { background-color: var(--absent-color) !important; color:#666 !important; cursor: not-allowed; opacity: 0.55; }
@@ -675,7 +676,7 @@
     let activeWordId = null;
     let currentGuess = [];      // текущая попытка как массив (буквы по позициям)
     let selectedIndex = 0;      // активная клетка (для вставки в любое место)
-    let sessionLocked = {};     // {idx: буква} — открытые зелёные буквы
+    let sessionGreens = {};    // {idx: буква} — открытые зелёные буквы (подсказка, но клетку можно перезаписать)
     let sessionPresent = [];    // буквы-подсказки (оранжевые)
     let sessionRemoved = [];    // серые буквы, убранные с клавиатуры
     let sessionExtraAttempts = 0;
@@ -1216,6 +1217,15 @@
       return base;
     }
 
+    // Игра завершена? (отгадано или закончились попытки)
+    function isSolved(w) {
+      const s = w.secret.toUpperCase();
+      return (w.attempts || []).some(a => String(a).toUpperCase() === s);
+    }
+    function isGameOver(w) {
+      return w.status === 'completed' || isSolved(w) || (w.attempts || []).length >= getMaxAttempts();
+    }
+
     function pickRandom(arr, n) {
       const copy = arr.slice(); const out = [];
       while (n-- > 0 && copy.length) out.push(copy.splice(Math.floor(Math.random() * copy.length), 1)[0]);
@@ -1253,13 +1263,13 @@
       const len = wordObj.len;
       const eff = computeStartEffects(wordObj);
 
-      eff.greenIdx.forEach(i => { sessionLocked[i] = secret[i]; });
+      eff.greenIdx.forEach(i => { sessionGreens[i] = secret[i]; });
       const freeIdx = [];
-      for (let i = 0; i < len; i++) if (!(i in sessionLocked)) freeIdx.push(i);
-      pickRandom(freeIdx, eff.greenRandom).forEach(i => { sessionLocked[i] = secret[i]; });
+      for (let i = 0; i < len; i++) if (!(i in sessionGreens)) freeIdx.push(i);
+      pickRandom(freeIdx, eff.greenRandom).forEach(i => { sessionGreens[i] = secret[i]; });
 
-      const lockedLetters = new Set(Object.values(sessionLocked));
-      let candidates = [...new Set(secret.split(''))].filter(l => !lockedLetters.has(l));
+      const greenLetters = new Set(Object.values(sessionGreens));
+      let candidates = [...new Set(secret.split(''))].filter(l => !greenLetters.has(l));
       if (eff.vowel) {
         const v = candidates.filter(l => VOWELS.includes(l));
         if (v.length) { const p = pickRandom(v, 1)[0]; sessionPresent.push(p); candidates = candidates.filter(l => l !== p); }
@@ -1273,27 +1283,34 @@
     function startWord(id) {
       activeWordId = id;
       const wObj = globalState.words[id];
-      sessionLocked = {}; sessionPresent = []; sessionRemoved = []; sessionExtraAttempts = 0;
+      sessionGreens = {}; sessionPresent = []; sessionRemoved = []; sessionExtraAttempts = 0;
       selectedIndex = 0;
       applyStartEffects(wObj);
-      currentGuess = buildGuessTemplate(wObj.len);
-      selectedIndex = firstEditable(wObj.len);
-      document.getElementById('game-status-msg').innerText = wObj.author === 'Система'
-        ? '📅 Слово дня' : `Слово от Игрока ${wObj.author} (${wObj.len} букв)`;
-      document.getElementById('game-status-msg').style.color = 'var(--accent-color)';
+      currentGuess = buildGuessTemplate(wObj.len);   // открытые буквы подставлены, но их можно стереть/заменить
+      selectedIndex = firstEmpty(wObj.len);
+      const msgEl = document.getElementById('game-status-msg');
+      msgEl.dataset.base = '';
+      msgEl.style.color = 'var(--accent-color)';
+      msgEl.innerText = isGameOver(wObj)
+        ? '✅ Это слово уже сыграно'
+        : (wObj.author === 'Система' ? '📅 Слово дня' : `Слово от Игрока ${wObj.author} (${wObj.len} букв)`);
       showScreen(screenGame);
       renderConsumableBar();
       renderBoard();
     }
 
+    // Шаблон текущей попытки: открытые (зелёные) буквы подставлены как подсказка
     function buildGuessTemplate(len) {
       const a = Array(len).fill('');
-      for (const k in sessionLocked) a[+k] = sessionLocked[k];
+      for (const k in sessionGreens) a[+k] = sessionGreens[k];
       return a;
     }
-    function firstEditable(len) { let i = 0; while (i < len && (i in sessionLocked)) i++; return i < len ? i : 0; }
-    function nextEditable(from, len) { let i = from; while (i < len && (i in sessionLocked)) i++; return i; }
-    function firstEmpty(len) { for (let i = 0; i < len; i++) if (!currentGuess[i] && !(i in sessionLocked)) return i; return len - 1; }
+    function firstEmpty(len) { for (let i = 0; i < len; i++) if (!currentGuess[i]) return i; return len - 1; }
+    function nextEmpty(from, len) {
+      for (let i = from; i < len; i++) if (!currentGuess[i]) return i;
+      for (let i = 0; i < len; i++) if (!currentGuess[i]) return i;
+      return Math.min(from, len - 1);
+    }
 
     // ---- Клавиатура и ввод (буквы можно ставить в любую позицию) ----
     document.addEventListener('keydown', (e) => {
@@ -1312,6 +1329,7 @@
 
     function handleInput(key) {
       const wordObj = globalState.words[activeWordId];
+      if (isGameOver(wordObj)) return;   // слово уже отгадано/закончено — ввод заблокирован
       const len = wordObj.len;
 
       if (key === 'ENTER') {
@@ -1320,27 +1338,28 @@
         return;
       }
       if (key === 'BACKSPACE') {
-        if (currentGuess[selectedIndex] && !(selectedIndex in sessionLocked)) {
-          currentGuess[selectedIndex] = '';
-        } else {
+        if (currentGuess[selectedIndex]) { currentGuess[selectedIndex] = ''; }
+        else {
           let i = selectedIndex - 1;
-          while (i >= 0 && (i in sessionLocked)) i--;
+          while (i >= 0 && !currentGuess[i]) i--;
           if (i >= 0) { currentGuess[i] = ''; selectedIndex = i; }
         }
         renderBoard();
         return;
       }
       if (sessionRemoved.includes(key)) return;
-      if (selectedIndex in sessionLocked) selectedIndex = nextEditable(selectedIndex, len);
       if (selectedIndex < len) {
-        currentGuess[selectedIndex] = key;
-        selectedIndex = nextEditable(selectedIndex + 1, len);
-        if (selectedIndex >= len) selectedIndex = firstEmpty(len);
+        currentGuess[selectedIndex] = key;                 // можно перезаписать даже открытую зелёную букву
+        selectedIndex = nextEmpty(selectedIndex + 1, len);
       }
       renderBoard();
     }
 
-    function selectCell(i) { if (i in sessionLocked) return; selectedIndex = i; renderBoard(); }
+    function selectCell(i) {
+      const wordObj = globalState.words[activeWordId];
+      if (isGameOver(wordObj)) return;
+      selectedIndex = i; renderBoard();
+    }
 
     function showGameMsg(msg) {
       const el = document.getElementById('game-status-msg');
@@ -1356,6 +1375,7 @@
 
     function trySubmit() {
       const wordObj = globalState.words[activeWordId];
+      if (isGameOver(wordObj)) return;
       const guess = currentGuess.join('').toUpperCase();
       const secret = wordObj.secret.toUpperCase();
       if (guess !== secret && !isValidWord(guess)) {
@@ -1374,61 +1394,64 @@
     function renderConsumableBar() {
       const bar = document.getElementById('game-consumables');
       bar.innerHTML = '';
+      const wordObj = globalState.words[activeWordId];
       const inv = globalState?.inventory?.[myRole] || {};
       let any = false;
-      IN_GAME_CONSUMABLES.forEach(id => {
-        const e = inv[id];
-        const count = (e && typeof e === 'object') ? (e.count || 0) : 0;
-        if (count > 0) {
-          any = true;
-          const item = SHOP_ITEMS.find(i => i.id === id);
-          const b = document.createElement('button');
-          b.innerText = `🧪 ${item.name} ×${count}`;
-          b.onclick = () => useConsumable(id);
-          bar.appendChild(b);
-        }
-      });
+      if (!isGameOver(wordObj)) {
+        IN_GAME_CONSUMABLES.forEach(id => {
+          const e = inv[id];
+          const count = (e && typeof e === 'object') ? (e.count || 0) : 0;
+          if (count > 0) {
+            any = true;
+            const item = SHOP_ITEMS.find(i => i.id === id);
+            const b = document.createElement('button');
+            b.innerText = `🧪 ${item.name} ×${count}`;
+            b.onclick = () => useConsumable(id);
+            bar.appendChild(b);
+          }
+        });
+      }
       bar.style.display = any ? 'flex' : 'none';
     }
 
     function useConsumable(id) {
       const wordObj = globalState.words[activeWordId];
+      if (isGameOver(wordObj)) return;
       const secret = wordObj.secret.toUpperCase();
       const len = wordObj.len;
       const e = globalState?.inventory?.[myRole]?.[id];
       let count = (e && typeof e === 'object') ? (e.count || 0) : 0;
       if (count <= 0) return;
 
-      const lockCell = (i) => { if (i >= 0 && i < len && !(i in sessionLocked)) { sessionLocked[i] = secret[i]; currentGuess[i] = secret[i]; return true; } return false; };
+      // Открыть букву как зелёную подсказку (клетку по-прежнему можно перезаписать)
+      const revealCell = (i) => { if (i >= 0 && i < len && !(i in sessionGreens)) { sessionGreens[i] = secret[i]; currentGuess[i] = secret[i]; return true; } return false; };
       let used = true;
 
-      if (id === 'cons_finish_mark') { if (!lockCell(len - 1)) { showGameMsg('Последняя буква уже открыта'); used = false; } }
-      else if (id === 'cons_rand_green') { const free = []; for (let i = 0; i < len; i++) if (!(i in sessionLocked)) free.push(i); if (free.length) lockCell(pickRandom(free, 1)[0]); else used = false; }
-      else if (id === 'cons_target') { const p = parseInt(prompt(`Какую позицию открыть? (1-${len})`)); if (!p || p < 1 || p > len) { used = false; } else if (!lockCell(p - 1)) { showGameMsg('Эта буква уже открыта'); used = false; } }
+      if (id === 'cons_finish_mark') { if (!revealCell(len - 1)) { showGameMsg('Последняя буква уже открыта'); used = false; } }
+      else if (id === 'cons_rand_green') { const free = []; for (let i = 0; i < len; i++) if (!(i in sessionGreens)) free.push(i); if (free.length) revealCell(pickRandom(free, 1)[0]); else used = false; }
+      else if (id === 'cons_target') { const p = parseInt(prompt(`Какую позицию открыть? (1-${len})`)); if (!p || p < 1 || p > len) { used = false; } else if (!revealCell(p - 1)) { showGameMsg('Эта буква уже открыта'); used = false; } }
       else if (id === 'cons_deep_clean' || id === 'cons_pack_clean') { const n = id === 'cons_pack_clean' ? 3 : 5; const avail = RUS_ALPHABET.filter(l => !secret.includes(l) && !sessionRemoved.includes(l)); pickRandom(avail, n).forEach(l => sessionRemoved.push(l)); }
       else if (id === 'cons_life_saver') { sessionExtraAttempts += 1; showGameMsg('➕ Добавлена попытка'); }
       else if (id === 'cons_xray' || id === 'cons_pack_xray') { const cnt = {}; secret.split('').forEach(l => cnt[l] = (cnt[l] || 0) + 1); const rep = Object.entries(cnt).filter(([, n]) => n > 1); alert(rep.length ? 'Повторяющиеся буквы: ' + rep.map(([l, n]) => `${l}×${n}`).join(', ') : 'В слове нет повторяющихся букв.'); }
-      else if (id === 'cons_vowel_scan') { const vs = [...new Set(secret.split('').filter(l => VOWELS.includes(l)))]; vs.forEach(l => { if (!sessionPresent.includes(l) && !Object.values(sessionLocked).includes(l)) sessionPresent.push(l); }); }
-      else if (id === 'cons_va_bank') { if ((wordObj.attempts || []).length < getMaxAttempts() - 1) { showGameMsg('Доступно только на последней попытке'); used = false; } else { const free = []; for (let i = 0; i < len; i++) if (!(i in sessionLocked)) free.push(i); if (free.length) lockCell(pickRandom(free, 1)[0]); else used = false; } }
+      else if (id === 'cons_vowel_scan') { const vs = [...new Set(secret.split('').filter(l => VOWELS.includes(l)))]; vs.forEach(l => { if (!sessionPresent.includes(l) && !Object.values(sessionGreens).includes(l)) sessionPresent.push(l); }); }
+      else if (id === 'cons_va_bank') { if ((wordObj.attempts || []).length < getMaxAttempts() - 1) { showGameMsg('Доступно только на последней попытке'); used = false; } else { const free = []; for (let i = 0; i < len; i++) if (!(i in sessionGreens)) free.push(i); if (free.length) revealCell(pickRandom(free, 1)[0]); else used = false; } }
 
       if (used) {
         if (!globalState.inventory) globalState.inventory = {};
         if (!globalState.inventory[myRole]) globalState.inventory[myRole] = {};
         globalState.inventory[myRole][id] = { count: count - 1 };
         db.ref(`wordle_season_v1/inventory/${myRole}/${id}`).set({ count: count - 1 });
-        currentGuess = mergeLocked(currentGuess, len);
-        selectedIndex = firstEditable(len);
+        selectedIndex = firstEmpty(len);
         renderConsumableBar();
         renderBoard();
       }
     }
-    function mergeLocked(cur, len) { const a = cur.slice(); for (const k in sessionLocked) a[+k] = sessionLocked[k]; return a; }
 
     function renderHintBar() {
       const bar = document.getElementById('game-hint-bar');
       const parts = [];
-      const greens = Object.keys(sessionLocked).map(Number).sort((a, b) => a - b);
-      if (greens.length) parts.push('🟩 Открыто: ' + greens.map(i => `<b>${i + 1}-я = ${sessionLocked[i]}</b>`).join(', '));
+      const greens = Object.keys(sessionGreens).map(Number).sort((a, b) => a - b);
+      if (greens.length) parts.push('🟩 Открыто: ' + greens.map(i => `<b>${i + 1}-я = ${sessionGreens[i]}</b>`).join(', '));
       if (sessionPresent.length) parts.push('🟧 Есть в слове: <b>' + [...new Set(sessionPresent)].join(', ') + '</b>');
       if (sessionRemoved.length) parts.push('⛔ Убрано с клавиатуры букв: <b>' + sessionRemoved.length + '</b>');
       const extra = getMaxAttempts() - MAX_ATTEMPTS;
@@ -1447,11 +1470,12 @@
 
       const attempts = wordObj.attempts || [];
       const keyStates = {};
-      Object.values(sessionLocked).forEach(l => keyStates[l] = 'correct');
+      Object.values(sessionGreens).forEach(l => keyStates[l] = 'correct');
       sessionPresent.forEach(l => { if (keyStates[l] !== 'correct') keyStates[l] = 'present'; });
 
       const secret = wordObj.secret.toUpperCase();
-      const curRow = attempts.length;
+      const over = isGameOver(wordObj);
+      const curRow = over ? -1 : attempts.length;   // после отгадывания активной строки нет — ввод закрыт
       const size = len > 7 ? '34px' : (len > 5 ? '42px' : '48px');
       const fs = len > 7 ? '1.1rem' : '1.4rem';
 
@@ -1476,13 +1500,11 @@
           } else if (r === curRow) {
             const l = currentGuess[c] || '';
             tile.innerText = l;
-            if (c in sessionLocked) { tile.classList.add('locked'); }
-            else {
-              if (l) tile.classList.add('cur-filled');
-              if (c === selectedIndex) tile.classList.add('selected');
-              tile.style.cursor = 'pointer';
-              tile.onclick = () => selectCell(c);
-            }
+            const isGreenHint = (c in sessionGreens) && l === sessionGreens[c];
+            if (l) tile.classList.add(isGreenHint ? 'prefill-green' : 'cur-filled');
+            if (c === selectedIndex) tile.classList.add('selected');
+            tile.style.cursor = 'pointer';
+            tile.onclick = () => selectCell(c);
           }
           grid.appendChild(tile);
         }
@@ -1503,13 +1525,16 @@
       const wordObj = globalState.words[activeWordId];
       const attempts = wordObj.attempts || [];
       attempts.push(guess);
+      wordObj.attempts = attempts;   // фиксируем локально, чтобы сразу заблокировать повторный ввод
       const maxAtt = getMaxAttempts();
 
       const isWin = guess === wordObj.secret.toUpperCase();
       const isLose = !isWin && attempts.length >= maxAtt;
 
+      if (isWin || isLose) wordObj.status = 'completed';
+
       currentGuess = buildGuessTemplate(wordObj.len);
-      selectedIndex = firstEditable(wordObj.len);
+      selectedIndex = firstEmpty(wordObj.len);
 
       if (isWin || isLose) {
         let rpChange = 0, coinsEarned = 0, pointsEarned = 0;
@@ -1562,6 +1587,7 @@
           `Очки: <b>+${pointsEarned} 🎯</b><br>` +
           `Монеты: <b>+${coinsEarned} 🪙</b>`;
         document.getElementById('result-modal').classList.remove('hidden');
+        renderBoard();
       } else {
         db.ref(`wordle_season_v1/words/${activeWordId}/attempts`).set(attempts);
         renderBoard();
