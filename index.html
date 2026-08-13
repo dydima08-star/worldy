@@ -221,6 +221,18 @@
     .tile.cur-filled { border-color: #888; }
     .tile.locked { background-color: var(--correct-color); border-color: var(--correct-color); color:#fff; }
     .tile.prefill-green { background-color: var(--correct-color); border-color: var(--correct-color); color:#fff; }
+    /* Пустая клетка с известной зелёной буквой: только подсветка позиции, буква НЕ подставляется */
+    .tile.green-hint { border-color: var(--correct-color); background-color: rgba(83,141,78,0.18); box-shadow: inset 0 0 0 2px rgba(83,141,78,0.45); }
+
+    /* Анимированная рулетка ежедневного бонуса */
+    .roulette-window { position: relative; width: 100%; height: 72px; overflow: hidden; border: 2px solid var(--gold-color); border-radius: 10px; background: #0e0e0f; margin: 16px 0; box-shadow: inset 0 0 20px rgba(0,0,0,0.7); }
+    .roulette-window::before, .roulette-window::after { content: ''; position: absolute; top: 0; bottom: 0; width: 40px; z-index: 2; pointer-events: none; }
+    .roulette-window::before { left: 0; background: linear-gradient(to right, #0e0e0f, transparent); }
+    .roulette-window::after { right: 0; background: linear-gradient(to left, #0e0e0f, transparent); }
+    .roulette-pointer { position: absolute; top: -2px; bottom: -2px; left: 50%; width: 3px; background: var(--rp-color); transform: translateX(-50%); z-index: 3; box-shadow: 0 0 10px var(--rp-color); }
+    .roulette-pointer::before { content: '\25BC'; position: absolute; top: -4px; left: 50%; transform: translateX(-50%); color: var(--rp-color); font-size: 0.8rem; }
+    .roulette-track { display: flex; height: 100%; will-change: transform; }
+    .roulette-item { flex: 0 0 140px; width: 140px; height: 100%; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 0.78rem; font-weight: bold; padding: 4px; border-right: 1px solid #2a2a2c; line-height: 1.2; }
 
     /* Убранные (серые) клавиши */
     .key.disabled { background-color: var(--absent-color) !important; color:#666 !important; cursor: not-allowed; opacity: 0.55; }
@@ -407,6 +419,10 @@
   <div id="bonus-modal" class="modal-overlay hidden">
     <div class="modal">
       <h2>🎁 Ежедневный бонус</h2>
+      <div class="roulette-window" id="roulette-window">
+        <div class="roulette-pointer"></div>
+        <div class="roulette-track" id="roulette-track"></div>
+      </div>
       <p id="bonus-status" style="margin: 15px 0; font-weight: bold; color: #aaa;">🎁 Испытайте удачу!</p>
       <button id="btn-spin" onclick="spinDailyBonus()" class="gold">Крутить рулетку</button>
       <button onclick="closeDailyBonus()" class="secondary">Закрыть</button>
@@ -703,12 +719,20 @@
 
       // Собираем слова, которые игрок вписал в инпуты сейчас
       let wordsToAdd = [];
+      let invalidWords = [];
       [1, 2, 3].forEach(i => {
         const val = document.getElementById(`word-in-${i}`).value.trim().toUpperCase().replace(/Ё/g, 'Е');
-        if (val && /^[А-Я]+$/.test(val)) {
-          wordsToAdd.push({ val: val, index: i });
-        }
+        if (!val) return;
+        if (!/^[А-Я]+$/.test(val)) { invalidWords.push(val + ' (только русские буквы)'); return; }
+        // Слово должно быть в словаре, иначе соперник не сможет его ввести/отгадать
+        if (!isValidWord(val)) { invalidWords.push(val + ' (нет в словаре)'); return; }
+        wordsToAdd.push({ val: val, index: i });
       });
+
+      if (invalidWords.length) {
+        alert('Эти слова нельзя загадать:\n• ' + invalidWords.join('\n• ') + '\n\nЗагадывайте только слова из словаря игры.');
+        return;
+      }
 
       // Если игрок пытается отправить больше, чем разрешено (всего 3 в день)
       if (myWordsToday.length + wordsToAdd.length > 3) {
@@ -750,7 +774,7 @@
       { id: 'perm_orange2', type: 'permanent', name: 'Сигнал II (2 оранжевые)', desc: 'Навсегда: 2 оранжевые буквы подсвечены на старте.', price: 2200, catName: 'Навсегда' },
       { id: 'perm_extra_step', type: 'permanent', name: 'Запасной ход', desc: 'Навсегда: Дает +1 попытку (7 попыток вместо 6).', price: 3500, catName: 'Навсегда' },
       { id: 'perm_combo_shield', type: 'permanent', name: 'Страховка комбо', desc: 'Навсегда: 1 раз в сутки проигрыш не сбрасывает комбо.', price: 2000, catName: 'Навсегда' },
-      { id: 'perm_investor', type: 'permanent', name: 'Инвестор', desc: 'Навсегда: +15% к получаемым монетам за победы.', price: 2500, catName: 'Навсегда' },
+      { id: 'perm_investor', type: 'permanent', name: 'Инвестор', desc: 'Навсегда: +15% монет при обмене очков на монеты.', price: 2500, catName: 'Навсегда' },
       { id: 'perm_rare_detect', type: 'permanent', name: 'Редкий подбор', desc: 'Навсегда: Авто-открытие букв Ъ, Ь, Э, Ф, Ц при наличии.', price: 900, catName: 'Навсегда' },
       { id: 'perm_vowel_detect', type: 'permanent', name: 'Детектор гласных', desc: 'Навсегда: 1 гласная буква подсвечена оранжевым.', price: 1100, catName: 'Навсегда' },
       { id: 'perm_gold_nick', type: 'permanent', name: 'Золотой статус', desc: 'Навсегда: Золотая рамка и значок 👑 в профиле.', price: 500, catName: 'Навсегда' },
@@ -763,7 +787,7 @@
       { id: 'day_anti_penalty', type: 'daily', name: 'Анти-штраф', desc: '24 часа: Снижает штраф очков при поражении на 50%.', price: 250, catName: 'На день' },
       { id: 'day_radar4', type: 'daily', name: 'Дневной радар (4 серые)', desc: '24 часа: Убирает 4 серые буквы с клавиатуры на старте.', price: 500, catName: 'На день' },
       { id: 'day_long_start', type: 'daily', name: 'Длинный старт', desc: '24 часа: Первая буква бесплатна для слов от 7 букв.', price: 350, catName: 'На день' },
-      { id: 'day_double_reward', type: 'daily', name: 'Удвоитель наград', desc: '24 часа: +50% ко всем получаемым монетам.', price: 450, catName: 'На день' },
+      { id: 'day_double_reward', type: 'daily', name: 'Удвоитель наград', desc: '24 часа: +50% монет при обмене очков на монеты.', price: 450, catName: 'На день' },
       { id: 'day_clean_sheet', type: 'daily', name: 'Чистый лист', desc: '24 часа: Буквы Ъ и Ь убираются, если их нет в слове.', price: 200, catName: 'На день' },
       { id: 'day_topic_hint', type: 'daily', name: 'Подсветка категории', desc: '24 часа: Показывает общую тему загаданного слова.', price: 150, catName: 'На день' },
       { id: 'day_morning_boost', type: 'daily', name: 'Утренний буст', desc: '24 часа: Первые 3 победы за день дают x2 очков.', price: 200, catName: 'На день' },
@@ -777,7 +801,7 @@
       { id: 'week_immunity', type: 'weekly', name: 'Недельный иммунитет', desc: '7 дней: Сброс комбо только после 2 поражений подряд.', price: 900, catName: 'На неделю' },
       { id: 'week_pos1', type: 'weekly', name: 'Неделя Первой буквы', desc: '7 дней: 1-я буква во всех словах открыта зелёным.', price: 1800, catName: 'На неделю' },
       { id: 'week_credit', type: 'weekly', name: 'Кредитный лимит', desc: '7 дней: Можно уходить в минус по очкам без сброса комбо.', price: 600, catName: 'На неделю' },
-      { id: 'week_gold_week', type: 'weekly', name: 'Золотая неделя', desc: '7 дней: +30% к фарму монет во всех раундах.', price: 1500, catName: 'На неделю' },
+      { id: 'week_gold_week', type: 'weekly', name: 'Золотая неделя', desc: '7 дней: +30% монет при обмене очков на монеты.', price: 1500, catName: 'На неделю' },
       { id: 'week_long_scanner', type: 'weekly', name: 'Сканер длинных слов', desc: '7 дней: В словах от 6 букв гасятся 2 серые буквы.', price: 1100, catName: 'На неделю' },
       { id: 'week_all_in', type: 'weekly', name: 'Набор "Всё включено"', desc: '7 дней: +1 ход + 1 оранжевая + 1 серая на старте.', price: 2500, catName: 'На неделю' },
       { id: 'week_combo_freeze', type: 'weekly', name: 'Заморозка комбо', desc: '7 дней: Комбо не падает ниже 2/5 при поражении.', price: 1300, catName: 'На неделю' },
@@ -798,13 +822,14 @@
     ];
 
     // ЕЖЕДНЕВНЫЕ НАГРАДЫ РУЛЕТКИ
+    // Шансы монотонно убывают: чем больше награда, тем реже она выпадает (сумма = 100)
     const DAILY_REWARDS = [
-      { type: 'score', val: 100, label: '100 Очков 🎯', chance: 35 },
-      { type: 'score', val: 300, label: '300 Очков 🎯', chance: 25 },
-      { type: 'score', val: 600, label: '600 Очков 🎯', chance: 20 },
-      { type: 'score', val: 1000, label: '1000 Очков 🎯', chance: 12 },
-      { type: 'score', val: 1999, label: '💎 ДЖЕКПОТ: 1999 Очков!', chance: 5 },
-      { type: 'boost', val: 1.35, label: '⚡ БУСТ x1.35 очков на 24 часа!', chance: 3 }
+      { type: 'score', val: 100, label: '100 Очков 🎯', chance: 40 },
+      { type: 'score', val: 250, label: '250 Очков 🎯', chance: 27 },
+      { type: 'score', val: 500, label: '500 Очков 🎯', chance: 16 },
+      { type: 'score', val: 1000, label: '1000 Очков 🎯', chance: 9 },
+      { type: 'score', val: 2000, label: '💎 ДЖЕКПОТ: 2000 Очков!', chance: 4 },
+      { type: 'boost', val: 1.35, label: '⚡ БУСТ x1.35 очков на 24ч', chance: 4 }
     ];
 
     function showScreen(sc) {
@@ -1144,13 +1169,18 @@
         return;
       }
 
+      // Бонусные улучшения (Инвестор, Удвоитель наград и т.д.) увеличивают выход монет при обмене
+      const mult = rewardEffects().coinMult;
+      const finalGain = Math.floor(coinsGain * mult);
+      const bonus = finalGain - coinsGain;
+
       const myCoins = globalState?.coins?.[myRole] || 0;
       db.ref().update({
         [`wordle_season_v1/score/${myRole}`]: myScore - pointsCost,
-        [`wordle_season_v1/coins/${myRole}`]: myCoins + coinsGain
+        [`wordle_season_v1/coins/${myRole}`]: myCoins + finalGain
       });
 
-      alert(`Успешный обмен! Получено +${coinsGain} 🪙`);
+      alert(`Успешный обмен! Получено +${finalGain} 🪙` + (bonus > 0 ? ` (в т.ч. +${bonus} бонус от улучшений)` : ''));
       renderShop();
       closeExchange();
     }
@@ -1161,6 +1191,7 @@
       const lastSpin = localStorage.getItem(`last_spin_${myRole}`);
       const now = Date.now();
       
+      resetRoulette();
       if (lastSpin && (now - lastSpin < 24 * 60 * 60 * 1000)) {
         const hoursLeft = Math.ceil((24 * 60 * 60 * 1000 - (now - lastSpin)) / (1000 * 60 * 60));
         document.getElementById('bonus-status').innerText = `⏳ Следующий бонус через ${hoursLeft} ч.`;
@@ -1175,22 +1206,81 @@
 
     function closeDailyBonus() { document.getElementById('bonus-modal').classList.add('hidden'); }
 
+    // Ширина одной ячейки рулетки (должна совпадать с .roulette-item в CSS)
+    const ROULETTE_ITEM_W = 140;
+    let isSpinning = false;
+
+    // Взвешенный выбор награды: чем больше значение, тем меньше шанс (см. chance)
+    function pickWeightedReward() {
+      let rand = Math.random() * 100, cumulative = 0;
+      for (let reward of DAILY_REWARDS) {
+        cumulative += reward.chance;
+        if (rand <= cumulative) return reward;
+      }
+      return DAILY_REWARDS[0];
+    }
+
+    function rewardColor(r) { return r.type === 'boost' ? '#ffd700' : (r.val >= 1000 ? '#2ecc71' : '#4ab8e2'); }
+
+    // Заполняет ленту рулетки; возвращает индекс, на котором остановится выигрыш
+    function buildRouletteReel(winner) {
+      const track = document.getElementById('roulette-track');
+      track.style.transition = 'none';
+      track.style.transform = 'translateX(0)';
+      track.innerHTML = '';
+      const total = 48;
+      const winIndex = total - 5; // выигрыш ближе к концу ленты
+      for (let i = 0; i < total; i++) {
+        const r = (i === winIndex) ? winner : DAILY_REWARDS[Math.floor(Math.random() * DAILY_REWARDS.length)];
+        const cell = document.createElement('div');
+        cell.className = 'roulette-item';
+        cell.style.color = rewardColor(r);
+        cell.innerText = r.label;
+        track.appendChild(cell);
+      }
+      return winIndex;
+    }
+
+    function resetRoulette() {
+      const win = pickWeightedReward(); // предпросмотр (не выигрыш) — просто чтобы лента не была пустой
+      buildRouletteReel(win);
+      // сдвигаем ленту так, чтобы что-то было под указателем
+      const track = document.getElementById('roulette-track');
+      const winEl = document.getElementById('roulette-window');
+      const center = (winEl.clientWidth || 360) / 2;
+      track.style.transform = `translateX(${center - ROULETTE_ITEM_W / 2}px)`;
+    }
+
     function spinDailyBonus() {
+      if (isSpinning) return;
       const statusEl = document.getElementById('bonus-status');
       const btnSpin = document.getElementById('btn-spin');
+      const track = document.getElementById('roulette-track');
+      const winEl = document.getElementById('roulette-window');
+
+      isSpinning = true;
       btnSpin.disabled = true;
-      statusEl.innerText = '🔄 Выбираем награду...';
+      btnSpin.style.opacity = '0.5';
+      statusEl.innerText = '🎰 Крутим рулетку...';
 
+      // 1) Определяем выигрыш заранее по шансам
+      const win = pickWeightedReward();
+      // 2) Строим ленту так, чтобы выигрыш оказался под указателем
+      const winIndex = buildRouletteReel(win);
+
+      const center = (winEl.clientWidth || 360) / 2;
+      // небольшой случайный сдвиг внутри ячейки для реалистичности
+      const jitter = (Math.random() * 2 - 1) * (ROULETTE_ITEM_W * 0.3);
+      const targetX = -(winIndex * ROULETTE_ITEM_W + ROULETTE_ITEM_W / 2 - center) + jitter;
+
+      // 3) Запускаем анимацию вращения с плавным замедлением
+      requestAnimationFrame(() => {
+        track.style.transition = 'transform 4.2s cubic-bezier(0.12, 0.75, 0.2, 1)';
+        track.style.transform = `translateX(${targetX}px)`;
+      });
+
+      // 4) По завершении — начисляем награду
       setTimeout(() => {
-        let rand = Math.random() * 100;
-        let cumulative = 0;
-        let win = DAILY_REWARDS[0];
-
-        for (let reward of DAILY_REWARDS) {
-          cumulative += reward.chance;
-          if (rand <= cumulative) { win = reward; break; }
-        }
-
         localStorage.setItem(`last_spin_${myRole}`, Date.now());
 
         if (win.type === 'score') {
@@ -1201,8 +1291,9 @@
           db.ref(`wordle_season_v1/boosts/${myRole}`).set({ mult: win.val, until: boostUntil });
         }
 
-        statusEl.innerHTML = `<span style="color:#2ecc71;">Поздравляем!</span><br>${win.label}`;
-      }, 1200);
+        statusEl.innerHTML = `<span style="color:#2ecc71;">🎉 Поздравляем!</span><br>${win.label}`;
+        isSpinning = false;
+      }, 4400);
     }
 
     // ================= ИГРОВОЙ ПРОЦЕСС =================
@@ -1299,11 +1390,11 @@
       renderBoard();
     }
 
-    // Шаблон текущей попытки: открытые (зелёные) буквы подставлены как подсказка
+    // Шаблон текущей попытки: клетки всегда пустые.
+    // Известные зелёные буквы показываются только как подсказка (подсветка позиции + панель подсказок),
+    // но НЕ подставляются в клетку — игрок вводит их сам.
     function buildGuessTemplate(len) {
-      const a = Array(len).fill('');
-      for (const k in sessionGreens) a[+k] = sessionGreens[k];
-      return a;
+      return Array(len).fill('');
     }
     function firstEmpty(len) { for (let i = 0; i < len; i++) if (!currentGuess[i]) return i; return len - 1; }
     function nextEmpty(from, len) {
@@ -1424,7 +1515,7 @@
       if (count <= 0) return;
 
       // Открыть букву как зелёную подсказку (клетку по-прежнему можно перезаписать)
-      const revealCell = (i) => { if (i >= 0 && i < len && !(i in sessionGreens)) { sessionGreens[i] = secret[i]; currentGuess[i] = secret[i]; return true; } return false; };
+      const revealCell = (i) => { if (i >= 0 && i < len && !(i in sessionGreens)) { sessionGreens[i] = secret[i]; return true; } return false; };
       let used = true;
 
       if (id === 'cons_finish_mark') { if (!revealCell(len - 1)) { showGameMsg('Последняя буква уже открыта'); used = false; } }
@@ -1500,8 +1591,8 @@
           } else if (r === curRow) {
             const l = currentGuess[c] || '';
             tile.innerText = l;
-            const isGreenHint = (c in sessionGreens) && l === sessionGreens[c];
-            if (l) tile.classList.add(isGreenHint ? 'prefill-green' : 'cur-filled');
+            if (l) tile.classList.add('cur-filled');
+            else if (c in sessionGreens) tile.classList.add('green-hint'); // пустая клетка с известной зелёной буквой: только подсветка
             if (c === selectedIndex) tile.classList.add('selected');
             tile.style.cursor = 'pointer';
             tile.onclick = () => selectCell(c);
@@ -1550,18 +1641,25 @@
           rpChange = Math.round(baseRP * mult * cMult);
 
           const rew = rewardEffects();
-          coinsEarned = Math.floor((rpChange / 10) * rew.coinMult);
+          // Монеты за отгаданное слово НЕ начисляются — монеты добываются только обменом очков.
+          coinsEarned = 0;
 
           let boostMult = 1.0;
           const activeBoost = globalState?.boosts?.[myRole];
           if (activeBoost && activeBoost.until > Date.now()) boostMult = activeBoost.mult;
           pointsEarned = Math.round(rpChange * boostMult * rew.pointMult);
         } else {
-          rpChange = -300; pointsEarned = 0;
+          // Штраф за поражение с учётом улучшений магазина
+          let penalty = 300;
+          if (isActiveById('day_zero_risk') || isActiveById('week_credit')) penalty = 0;
+          else if (isActiveById('day_anti_penalty')) penalty = Math.round(penalty * 0.5);
+          rpChange = -penalty; pointsEarned = 0; coinsEarned = 0;
+
           const today = new Date().toISOString().slice(0, 10);
           const shieldKey = `combo_shield_${myRole}`;
           const shielded = (isActiveById('perm_combo_shield') || isActiveById('week_immunity')) && localStorage.getItem(shieldKey) !== today;
           if (shielded) { localStorage.setItem(shieldKey, today); }
+          else if (isActiveById('week_combo_freeze')) { newCombo = Math.max(2, newCombo); } // комбо не падает ниже 2/5
           else { newCombo = 0; }
         }
 
@@ -1585,7 +1683,8 @@
           `Слово было: <b>${wordObj.secret}</b><br><br>` +
           `Рейтинг: <b>${rpChange > 0 ? '+' + rpChange : rpChange} RP</b><br>` +
           `Очки: <b>+${pointsEarned} 🎯</b><br>` +
-          `Монеты: <b>+${coinsEarned} 🪙</b>`;
+          `🔥 Комбо: <b>${newCombo}/5</b><br>` +
+          `<span style="font-size:0.8rem;color:#888;">Монеты добываются обменом очков в магазине 💱</span>`;
         document.getElementById('result-modal').classList.remove('hidden');
         renderBoard();
       } else {
