@@ -3126,12 +3126,15 @@
     // ЕЖЕДНЕВНЫЙ БОНУС (РУЛЕТКА)
     function openDailyBonus() {
       document.getElementById('bonus-modal').classList.remove('hidden');
-      const lastSpin = localStorage.getItem(`last_spin_${myRole}`);
-      const now = Date.now();
-      
+      const lastSpinDate = localStorage.getItem(`last_spin_date_${myRole}`);
+      const todayDate = new Date().toISOString().slice(0, 10); // Формат: YYYY-MM-DD
+
       resetRoulette();
-      if (lastSpin && (now - lastSpin < 24 * 60 * 60 * 1000)) {
-        const hoursLeft = Math.ceil((24 * 60 * 60 * 1000 - (now - lastSpin)) / (1000 * 60 * 60));
+      if (lastSpinDate && lastSpinDate === todayDate) {
+        // Бонус уже получен сегодня
+        const now = new Date();
+        const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+        const hoursLeft = Math.ceil((tomorrow - now) / (1000 * 60 * 60));
         document.getElementById('bonus-status').innerText = `⏳ Следующий бонус через ${hoursLeft} ч.`;
         document.getElementById('btn-spin').disabled = true;
         document.getElementById('btn-spin').style.opacity = '0.5';
@@ -3219,7 +3222,8 @@
 
       // 4) По завершении — начисляем награду
       setTimeout(() => {
-        localStorage.setItem(`last_spin_${myRole}`, Date.now());
+        const todayDate = new Date().toISOString().slice(0, 10); // Формат: YYYY-MM-DD
+        localStorage.setItem(`last_spin_date_${myRole}`, todayDate);
 
         if (win.type === 'score') {
           const currentScore = globalState?.score?.[myRole] || 0;
