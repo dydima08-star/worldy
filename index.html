@@ -2682,7 +2682,7 @@
       const n = (w || '').toLowerCase().replace(/ё/g, 'е');
       return VALID_WORDS.has(n);
     }
-    
+
     // ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
     let myRole = localStorage.getItem('wordle_role') ? parseInt(localStorage.getItem('wordle_role')) : null;
     let globalState = null;
@@ -2695,11 +2695,28 @@
     let sessionExtraAttempts = 0;
     const MAX_ATTEMPTS = 6;
 
+    // СИСТЕМА РАНГОВ
+    const RANKS = [
+      { name: 'Новичок', minRP: 0, maxRP: 999, color: '#95a5a6', icon: '🌱' },
+      { name: 'Любитель', minRP: 1000, maxRP: 4999, color: '#3498db', icon: '⭐' },
+      { name: 'Профи', minRP: 5000, maxRP: 14999, color: '#9b59b6', icon: '💎' },
+      { name: 'Мастер', minRP: 15000, maxRP: 29999, color: '#e74c3c', icon: '🔥' },
+      { name: 'Гроссмейстер', minRP: 30000, maxRP: Infinity, color: '#f39c12', icon: '👑' }
+    ];
+
+    function getRankByRP(rp) {
+      for (let rank of RANKS) {
+        if (rp >= rank.minRP && rp <= rank.maxRP) return rank;
+      }
+      return RANKS[0];
+    }
+
     const screenMenu = document.getElementById('screen-menu');
     const screenCreate = document.getElementById('screen-create');
     const screenGame = document.getElementById('screen-game');
     const screenShop = document.getElementById('screen-shop');
-    
+    const screenStats = document.getElementById('screen-stats');
+
     // ПЕРЕХОД К ЭКРАНУ СОЗДАНИЯ СЛОВ
     document.getElementById('btn-go-create').addEventListener('click', () => {
       showScreen(screenCreate);
@@ -3724,25 +3741,6 @@
       activeWordId = null;
       showScreen(screenMenu);
     }
-
-    // ================= СИСТЕМА РАНГОВ =================
-    const RANKS = [
-      { name: 'Новичок', minRP: 0, maxRP: 999, color: '#95a5a6', icon: '🌱' },
-      { name: 'Любитель', minRP: 1000, maxRP: 4999, color: '#3498db', icon: '⭐' },
-      { name: 'Профи', minRP: 5000, maxRP: 14999, color: '#9b59b6', icon: '💎' },
-      { name: 'Мастер', minRP: 15000, maxRP: 29999, color: '#e74c3c', icon: '🔥' },
-      { name: 'Гроссмейстер', minRP: 30000, maxRP: Infinity, color: '#f39c12', icon: '👑' }
-    ];
-
-    function getRankByRP(rp) {
-      for (let rank of RANKS) {
-        if (rp >= rank.minRP && rp <= rank.maxRP) return rank;
-      }
-      return RANKS[0];
-    }
-
-    // Добавляем переменную для хранения экрана статистики
-    const screenStats = document.getElementById('screen-stats');
 
     // ================= СТАТИСТИКА ИГРОКА =================
     let currentStatsPlayer = 1;
