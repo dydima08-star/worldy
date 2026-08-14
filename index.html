@@ -30,7 +30,7 @@
     /* Шапка и Сезон */
     header { width: 100%; max-width: 500px; text-align: center; margin-bottom: 15px; }
     h1 { font-size: 1.8rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
-    .season-banner { background: #272729; border: 1px solid var(--gold-color); border-radius: 8px; padding: 8px; margin-bottom: 10px; font-size: 0.85rem; }
+    .season-banner { background: #272729; border: 1px solid var(--gold-color); border-radius: 8px; padding: 8px; margin-bottom: 10px; font-size: 0.85rem; width: 100%; max-width: 500px; box-sizing: border-box; }
     .season-timer { color: var(--gold-color); font-weight: bold; font-family: monospace; font-size: 1rem; }
 
     /* Карточки игроков */
@@ -3762,8 +3762,14 @@
       document.getElementById('stats-btn-p2').style.color = playerNum === 2 ? 'white' : '#aaa';
       document.getElementById('stats-btn-p2').style.border = playerNum === 2 ? 'none' : '1px solid var(--border-color)';
 
+      // Проверяем наличие globalState
+      if (!globalState) {
+        document.getElementById('stats-container').innerHTML = '<div style="text-align: center; padding: 30px; color: #888;">Загрузка данных...</div>';
+        return;
+      }
+
       // Собираем статистику из базы
-      const allWords = Object.values(globalState?.words || {});
+      const allWords = Object.values(globalState.words || {});
       const playerWords = allWords.filter(w => w.target === playerNum && w.status === 'completed');
 
       const wins = playerWords.filter(w => {
@@ -3792,11 +3798,11 @@
         : 0;
 
       // Текущий ранг
-      const playerRP = globalState?.rp?.[playerNum] || 0;
+      const playerRP = globalState.rp?.[playerNum] || 0;
       const rank = getRankByRP(playerRP);
 
       // Рекорд комбо (максимальное комбо за сезон - нужно хранить в БД)
-      const maxCombo = globalState?.maxCombo?.[playerNum] || (globalState?.combos?.[playerNum] || 0);
+      const maxCombo = globalState.maxCombo?.[playerNum] || (globalState.combos?.[playerNum] || 0);
 
       // Рендерим статистику
       const container = document.getElementById('stats-container');
@@ -3863,13 +3869,17 @@
         </div>
       `;
 
-      // Обновляем текст кнопки подарка
-      const opponentNum = playerNum === 1 ? 2 : 1;
+      // Обновляем видимость и текст кнопки подарка
       const giftBtn = document.getElementById('btn-gift-coins');
-      if (playerNum === myRole) {
-        giftBtn.style.display = 'none';
-      } else {
+
+      // Показываем кнопку только если смотрим на соперника
+      if (playerNum !== myRole) {
         giftBtn.style.display = 'block';
+        giftBtn.innerHTML = `🎁 Подарить монеты Игроку ${playerNum}`;
+      } else {
+        giftBtn.style.display = 'none';
+      }
+    }
         giftBtn.innerHTML = `🎁 Подарить монеты Игроку ${playerNum}`;
       }
     }
