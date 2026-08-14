@@ -2865,6 +2865,9 @@
       if (!data) {
         data = { rp: {1:0, 2:0}, coins: {1:0, 2:0}, combos: {1:0, 2:0}, score: {1:0, 2:0}, seasonInfo: { lastReset: currentMonthStr } };
         gameRef.set(data);
+        // Не возвращаемся, продолжаем рендерить UI с начальными данными
+        globalState = data;
+        renderUI(data);
         return;
       }
 
@@ -2872,16 +2875,18 @@
         let p1RP = data.rp?.[1] || 0;
         let p2RP = data.rp?.[2] || 0;
         let newCoins = { 1: data.coins?.[1] || 0, 2: data.coins?.[2] || 0 };
-        
+
         if (p1RP > p2RP) { newCoins[1] += 1500; newCoins[2] += 750; }
         else if (p2RP > p1RP) { newCoins[2] += 1500; newCoins[1] += 750; }
         else { newCoins[1] += 1000; newCoins[2] += 1000; }
 
         gameRef.update({
+          rp: {1:0, 2:0},
+          combos: {1:0, 2:0},
           coins: newCoins,
           'seasonInfo/lastReset': currentMonthStr
         });
-        return;
+        // Не возвращаемся, рендерим с обновлёнными данными
       }
 
       globalState = data;
