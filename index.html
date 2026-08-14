@@ -3746,7 +3746,12 @@
     let currentStatsPlayer = 1;
 
     function showPlayerStats(playerNum) {
+      console.log('=== showPlayerStats вызван ===');
+      console.log('playerNum:', playerNum);
+      console.log('currentStatsPlayer до обновления:', currentStatsPlayer);
+
       currentStatsPlayer = playerNum;
+      console.log('currentStatsPlayer после обновления:', currentStatsPlayer);
 
       // Обновляем кнопки переключателя
       document.getElementById('stats-btn-p1').style.background = playerNum === 1 ? 'var(--accent-color)' : '#272729';
@@ -3765,11 +3770,15 @@
 
       // Собираем статистику из базы
       const allWords = Object.values(globalState.words || {});
+      console.log('Все слова:', allWords);
+      console.log('Фильтруем по target:', playerNum);
       const playerWords = allWords.filter(w => w.target === playerNum && w.status === 'completed');
+      console.log('Отфильтрованные слова игрока', playerNum, ':', playerWords);
 
       const wins = playerWords.filter(w => {
+        if (!w.attempts || w.attempts.length === 0) return false;
         const lastAttempt = w.attempts[w.attempts.length - 1];
-        return lastAttempt && lastAttempt.every((tile, i) => tile.state === 'correct');
+        return lastAttempt && Array.isArray(lastAttempt) && lastAttempt.every((tile, i) => tile.state === 'correct');
       }).length;
 
       const losses = playerWords.length - wins;
@@ -3780,7 +3789,7 @@
       playerWords.forEach(w => {
         if (w.attempts && w.attempts.length > 0) {
           const lastAttempt = w.attempts[w.attempts.length - 1];
-          const isWin = lastAttempt && lastAttempt.every((tile, i) => tile.state === 'correct');
+          const isWin = lastAttempt && Array.isArray(lastAttempt) && lastAttempt.every((tile, i) => tile.state === 'correct');
           if (isWin && w.attempts.length <= 8) {
             attemptsDistribution[w.attempts.length - 1]++;
           }
