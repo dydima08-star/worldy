@@ -3044,7 +3044,7 @@
 
     document.getElementById('btn-go-stats').addEventListener('click', () => {
       showScreen(screenStats);
-      showPlayerStats(1); // По умолчанию показываем статистику Игрока 1
+      showPlayerStats(currentStatsPlayer); // Показываем статистику выбранного игрока
     });
 
     function setShopFilter(filterType, btnEl) {
