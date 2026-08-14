@@ -292,6 +292,9 @@
   <!-- ГЛАВНОЕ МЕНЮ -->
   <div id="screen-menu" class="screen">
     <button id="btn-go-shop" class="gold">🛒 Магазин улучшений</button>
+    <button id="btn-go-stats" onclick="showScreen(screenStats)" class="gold" style="background: linear-gradient(45deg, #ff6b6b, #ee5a6f); color: white;">
+      📊 Статистика игроков
+    </button>
     <button id="btn-daily-bonus" onclick="openDailyBonus()" class="gold" style="background: linear-gradient(45deg, #a55eea, #4b7bec); color: white;">
       🎁 Ежедневный бонус
     </button>
@@ -387,6 +390,35 @@
     <button onclick="showScreen(screenMenu)" class="secondary" style="margin-top: 15px;">⬅️ Выйти в меню</button>
   </div>
 
+  <!-- СТАТИСТИКА -->
+  <div id="screen-stats" class="screen hidden">
+    <div class="menu-box" style="padding: 12px;">
+      <h3 style="text-align: center; margin-bottom: 12px;">📊 Статистика игроков</h3>
+
+      <!-- Переключатель игроков -->
+      <div style="display: flex; gap: 8px; margin-bottom: 15px;">
+        <button id="stats-btn-p1" onclick="showPlayerStats(1)" style="flex: 1; padding: 10px; background: var(--accent-color); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
+          Игрок 1
+        </button>
+        <button id="stats-btn-p2" onclick="showPlayerStats(2)" style="flex: 1; padding: 10px; background: #272729; color: #aaa; border: 1px solid var(--border-color); border-radius: 8px; font-weight: bold; cursor: pointer;">
+          Игрок 2
+        </button>
+      </div>
+
+      <!-- Контейнер статистики -->
+      <div id="stats-container" style="background: #1f1f22; border-radius: 8px; padding: 15px;">
+        <!-- Здесь будет статистика -->
+      </div>
+
+      <!-- Кнопка подарить монеты -->
+      <button id="btn-gift-coins" onclick="openGiftModal()" style="margin-top: 15px; background: linear-gradient(45deg, #ffd700, #ff9f43); color: black; font-weight: bold;">
+        🎁 Подарить монеты сопернику
+      </button>
+
+      <button onclick="showScreen(screenMenu)" class="secondary" style="margin-top: 10px;">⬅️ Вернуться в меню</button>
+    </div>
+  </div>
+
   <!-- Модалки -->
   <div id="role-modal" class="modal-overlay hidden">
     <div class="modal">
@@ -424,6 +456,41 @@
     <div class="modal">
       <h2>🎁 Ежедневный бонус</h2>
       <div class="roulette-window" id="roulette-window">
+        <div class="roulette-pointer"></div>
+        <div class="roulette-track" id="roulette-track"></div>
+      </div>
+      <p id="bonus-status" style="margin: 15px 0; font-weight: bold; color: #aaa;">🎁 Испытайте удачу!</p>
+      <button id="btn-spin" onclick="spinDailyBonus()" class="gold">Крутить рулетку</button>
+      <button onclick="closeDailyBonus()" class="secondary">Закрыть</button>
+    </div>
+  </div>
+
+  <!-- МОДАЛКА ПОДАРКА МОНЕТ -->
+  <div id="gift-modal" class="modal-overlay hidden">
+    <div class="modal" style="max-width: 400px;">
+      <h2>🎁 Подарить монеты</h2>
+      <p style="font-size: 0.85rem; color: #aaa; margin: 10px 0;">
+        Ваши монеты: <span id="gift-my-coins" style="color: var(--gold-color); font-weight: bold;">0</span> 🪙
+      </p>
+
+      <div style="margin: 15px 0;">
+        <button class="exchange-btn" onclick="sendGift(10)">
+          <span>Подарить 10 🪙</span>
+        </button>
+        <button class="exchange-btn" onclick="sendGift(50)">
+          <span>Подарить 50 🪙</span>
+        </button>
+        <button class="exchange-btn" onclick="sendGift(100)">
+          <span>Подарить 100 🪙</span>
+        </button>
+        <button class="exchange-btn" onclick="sendGift(500)">
+          <span>Подарить 500 🪙</span>
+        </button>
+      </div>
+
+      <button onclick="closeGiftModal()" class="secondary" style="margin: 0;">Закрыть</button>
+    </div>
+  </div>
         <div class="roulette-pointer"></div>
         <div class="roulette-track" id="roulette-track"></div>
       </div>
@@ -2830,17 +2897,32 @@
     });
 
     function renderUI(data) {
-      document.getElementById('p1-rp').textContent = `${data.rp?.[1] || 0} RP`;
-      document.getElementById('p2-rp').textContent = `${data.rp?.[2] || 0} RP`;
-      document.getElementById('p1-score').textContent = data.score?.[1] || 0;
-      document.getElementById('p2-score').textContent = data.score?.[2] || 0;
-      document.getElementById('p1-coins').textContent = `${data.coins?.[1] || 0} 🪙`;
-      document.getElementById('p2-coins').textContent = `${data.coins?.[2] || 0} 🪙`;
-      document.getElementById('p1-combo').textContent = `🔥 Комбо: ${data.combos?.[1] || 0}/5`;
-      document.getElementById('p2-combo').textContent = `🔥 Комбо: ${data.combos?.[2] || 0}/5`;
+      globalState = data;
 
-      const rp1 = data.rp?.[1] || 0;
-      const rp2 = data.rp?.[2] || 0;
+      // Обновляем максимальное комбо (если текущее больше)
+      if (data.combos) {
+        [1, 2].forEach(p => {
+          const currentCombo = data.combos[p] || 0;
+          const maxCombo = data.maxCombo?.[p] || 0;
+          if (currentCombo > maxCombo) {
+            db.ref(`wordle_season_v1/maxCombo/${p}`).set(currentCombo);
+          }
+        });
+      }
+
+      // Обновляем карточки игроков с рангами
+      [1, 2].forEach(p => {
+        const rp = data.rp?.[p] || 0;
+        const rank = getRankByRP(rp);
+
+        document.getElementById(`p${p}-rp`).innerHTML = `<span style="color: ${rank.color};">${rank.icon} ${rp} RP</span>`;
+        document.getElementById(`p${p}-score`).innerText = data.score?.[p] || 0;
+        document.getElementById(`p${p}-coins`).innerText = `${data.coins?.[p] || 0} 🪙`;
+        document.getElementById(`p${p}-combo`).textContent = `🔥 Комбо: ${data.combos?.[p] || 0}/5`;
+      });
+
+      // Корона победителю
+      const rp1 = data.rp?.[1] || 0, rp2 = data.rp?.[2] || 0;
       document.getElementById('p1-crown').style.display = rp1 > rp2 ? 'block' : 'none';
       document.getElementById('p2-crown').style.display = rp2 > rp1 ? 'block' : 'none';
 
@@ -2858,6 +2940,7 @@
       if (!screenShop.classList.contains('hidden')) renderShop();
       if (!screenGame.classList.contains('hidden') && activeWordId) renderBoard();
     }
+
 
     // СЛОВА И ИГРА
     function renderWords(wordsObj) {
@@ -2943,6 +3026,11 @@
     document.getElementById('btn-go-shop').addEventListener('click', () => {
       renderShop();
       showScreen(screenShop);
+    });
+
+    document.getElementById('btn-go-stats').addEventListener('click', () => {
+      showScreen(screenStats);
+      showPlayerStats(1); // По умолчанию показываем статистику Игрока 1
     });
 
     function setShopFilter(filterType, btnEl) {
@@ -3639,6 +3727,193 @@
       activeWordId = null;
       showScreen(screenMenu);
     }
+
+    // ================= СИСТЕМА РАНГОВ =================
+    const RANKS = [
+      { name: 'Новичок', minRP: 0, maxRP: 999, color: '#95a5a6', icon: '🌱' },
+      { name: 'Любитель', minRP: 1000, maxRP: 4999, color: '#3498db', icon: '⭐' },
+      { name: 'Профи', minRP: 5000, maxRP: 14999, color: '#9b59b6', icon: '💎' },
+      { name: 'Мастер', minRP: 15000, maxRP: 29999, color: '#e74c3c', icon: '🔥' },
+      { name: 'Гроссмейстер', minRP: 30000, maxRP: Infinity, color: '#f39c12', icon: '👑' }
+    ];
+
+    function getRankByRP(rp) {
+      for (let rank of RANKS) {
+        if (rp >= rank.minRP && rp <= rank.maxRP) return rank;
+      }
+      return RANKS[0];
+    }
+
+    // Добавляем переменную для хранения экрана статистики
+    const screenStats = document.getElementById('screen-stats');
+
+    // ================= СТАТИСТИКА ИГРОКА =================
+    let currentStatsPlayer = 1;
+
+    function showPlayerStats(playerNum) {
+      currentStatsPlayer = playerNum;
+
+      // Обновляем кнопки переключателя
+      document.getElementById('stats-btn-p1').style.background = playerNum === 1 ? 'var(--accent-color)' : '#272729';
+      document.getElementById('stats-btn-p1').style.color = playerNum === 1 ? 'white' : '#aaa';
+      document.getElementById('stats-btn-p1').style.border = playerNum === 1 ? 'none' : '1px solid var(--border-color)';
+
+      document.getElementById('stats-btn-p2').style.background = playerNum === 2 ? 'var(--accent-color)' : '#272729';
+      document.getElementById('stats-btn-p2').style.color = playerNum === 2 ? 'white' : '#aaa';
+      document.getElementById('stats-btn-p2').style.border = playerNum === 2 ? 'none' : '1px solid var(--border-color)';
+
+      // Собираем статистику из базы
+      const allWords = Object.values(globalState?.words || {});
+      const playerWords = allWords.filter(w => w.target === playerNum && w.status === 'completed');
+
+      const wins = playerWords.filter(w => {
+        const lastAttempt = w.attempts[w.attempts.length - 1];
+        return lastAttempt && lastAttempt.every((tile, i) => tile.state === 'correct');
+      }).length;
+
+      const losses = playerWords.length - wins;
+      const winRate = playerWords.length > 0 ? Math.round((wins / playerWords.length) * 100) : 0;
+
+      // Распределение по попыткам
+      const attemptsDistribution = [0, 0, 0, 0, 0, 0, 0, 0]; // 1-8 попыток
+      playerWords.forEach(w => {
+        if (w.attempts && w.attempts.length > 0) {
+          const lastAttempt = w.attempts[w.attempts.length - 1];
+          const isWin = lastAttempt && lastAttempt.every((tile, i) => tile.state === 'correct');
+          if (isWin && w.attempts.length <= 8) {
+            attemptsDistribution[w.attempts.length - 1]++;
+          }
+        }
+      });
+
+      // Средняя длина слова
+      const avgLength = playerWords.length > 0
+        ? (playerWords.reduce((sum, w) => sum + (w.len || 0), 0) / playerWords.length).toFixed(1)
+        : 0;
+
+      // Текущий ранг
+      const playerRP = globalState?.rp?.[playerNum] || 0;
+      const rank = getRankByRP(playerRP);
+
+      // Рекорд комбо (максимальное комбо за сезон - нужно хранить в БД)
+      const maxCombo = globalState?.maxCombo?.[playerNum] || (globalState?.combos?.[playerNum] || 0);
+
+      // Рендерим статистику
+      const container = document.getElementById('stats-container');
+      container.innerHTML = `
+        <div style="text-align: center; margin-bottom: 20px;">
+          <div style="font-size: 3rem; margin-bottom: 5px;">${rank.icon}</div>
+          <div style="font-size: 1.3rem; font-weight: bold; color: ${rank.color};">${rank.name}</div>
+          <div style="font-size: 0.85rem; color: #888; margin-top: 3px;">${playerRP} RP</div>
+          ${rank.maxRP !== Infinity ? `<div style="font-size: 0.75rem; color: #666;">До ${RANKS[RANKS.indexOf(rank) + 1].name}: ${RANKS[RANKS.indexOf(rank) + 1].minRP - playerRP} RP</div>` : ''}
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+          <div style="background: #272729; padding: 12px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 1.8rem; font-weight: bold; color: #2ecc71;">${wins}</div>
+            <div style="font-size: 0.8rem; color: #aaa;">Победы</div>
+          </div>
+          <div style="background: #272729; padding: 12px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 1.8rem; font-weight: bold; color: #e74c3c;">${losses}</div>
+            <div style="font-size: 0.8rem; color: #aaa;">Поражения</div>
+          </div>
+        </div>
+
+        <div style="background: #272729; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span style="font-size: 0.85rem; color: #aaa;">Процент побед</span>
+            <span style="font-size: 0.9rem; font-weight: bold; color: ${winRate >= 70 ? '#2ecc71' : winRate >= 50 ? '#f39c12' : '#e74c3c'};">${winRate}%</span>
+          </div>
+          <div style="width: 100%; height: 8px; background: #1a1a1b; border-radius: 4px; overflow: hidden;">
+            <div style="width: ${winRate}%; height: 100%; background: linear-gradient(90deg, #2ecc71, #27ae60); transition: width 0.3s;"></div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 15px;">
+          <div style="background: #272729; padding: 10px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 1.3rem; font-weight: bold; color: #4ab8e2;">${playerWords.length}</div>
+            <div style="font-size: 0.75rem; color: #aaa;">Всего игр</div>
+          </div>
+          <div style="background: #272729; padding: 10px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 1.3rem; font-weight: bold; color: #9b59b6;">${avgLength}</div>
+            <div style="font-size: 0.75rem; color: #aaa;">Ср. длина</div>
+          </div>
+          <div style="background: #272729; padding: 10px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 1.3rem; font-weight: bold; color: #ff9f43;">${maxCombo}/5</div>
+            <div style="font-size: 0.75rem; color: #aaa;">Рекорд комбо</div>
+          </div>
+        </div>
+
+        <div style="background: #272729; padding: 12px; border-radius: 8px;">
+          <div style="font-size: 0.9rem; font-weight: bold; margin-bottom: 10px; color: #fff;">📈 Распределение побед по попыткам</div>
+          ${attemptsDistribution.map((count, i) => {
+            const maxCount = Math.max(...attemptsDistribution);
+            const percent = maxCount > 0 ? (count / maxCount) * 100 : 0;
+            return `
+              <div style="display: flex; align-items: center; margin-bottom: 6px;">
+                <div style="width: 25px; font-size: 0.8rem; color: #aaa;">${i + 1}</div>
+                <div style="flex: 1; height: 20px; background: #1a1a1b; border-radius: 4px; overflow: hidden; margin: 0 8px;">
+                  <div style="width: ${percent}%; height: 100%; background: linear-gradient(90deg, #4ab8e2, #357abd); display: flex; align-items: center; justify-content: flex-end; padding-right: 5px;">
+                    ${count > 0 ? `<span style="font-size: 0.75rem; color: #fff; font-weight: bold;">${count}</span>` : ''}
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+
+      // Обновляем текст кнопки подарка
+      const opponentNum = playerNum === 1 ? 2 : 1;
+      const giftBtn = document.getElementById('btn-gift-coins');
+      if (playerNum === myRole) {
+        giftBtn.style.display = 'none';
+      } else {
+        giftBtn.style.display = 'block';
+        giftBtn.innerHTML = `🎁 Подарить монеты Игроку ${playerNum}`;
+      }
+    }
+
+    // ================= СИСТЕМА ПОДАРКОВ =================
+    function openGiftModal() {
+      document.getElementById('gift-modal').classList.remove('hidden');
+      const myCoins = globalState?.coins?.[myRole] || 0;
+      document.getElementById('gift-my-coins').innerText = myCoins;
+    }
+
+    function closeGiftModal() {
+      document.getElementById('gift-modal').classList.add('hidden');
+    }
+
+    function sendGift(amount) {
+      const myCoins = globalState?.coins?.[myRole] || 0;
+      const targetPlayer = currentStatsPlayer;
+
+      if (myCoins < amount) {
+        alert(`У вас недостаточно монет! Нужно ${amount}, а у вас ${myCoins} 🪙`);
+        return;
+      }
+
+      if (targetPlayer === myRole) {
+        alert('Нельзя подарить монеты самому себе! 😅');
+        return;
+      }
+
+      if (!confirm(`Подарить ${amount} 🪙 монет Игроку ${targetPlayer}?`)) {
+        return;
+      }
+
+      const targetCoins = globalState?.coins?.[targetPlayer] || 0;
+
+      db.ref().update({
+        [`wordle_season_v1/coins/${myRole}`]: myCoins - amount,
+        [`wordle_season_v1/coins/${targetPlayer}`]: targetCoins + amount
+      });
+
+      alert(`✅ Вы подарили ${amount} 🪙 Игроку ${targetPlayer}!`);
+      closeGiftModal();
+    }
+
   </script>
 </body>
 </html>
