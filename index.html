@@ -287,6 +287,7 @@
   <script src="js/bonus.js"></script>
   <script src="js/miner.js"></script>
   <script src="js/game-logic.js"></script>
+  <script src="js/game-input.js"></script>
   <script>
 
 
@@ -452,51 +453,6 @@
       handleInput(btn.dataset.key);
     });
 
-    function handleInput(key) {
-      const wordObj = globalState.words[activeWordId];
-      if (isGameOver(wordObj)) return;   // слово уже отгадано/закончено — ввод заблокирован
-      const len = wordObj.len;
-
-      if (key === 'ENTER') {
-        if (currentGuess.every(Boolean)) trySubmit();
-        else showGameMsg('Заполните все клетки!');
-        return;
-      }
-      if (key === 'BACKSPACE') {
-        if (currentGuess[selectedIndex]) { currentGuess[selectedIndex] = ''; }
-        else {
-          let i = selectedIndex - 1;
-          while (i >= 0 && !currentGuess[i]) i--;
-          if (i >= 0) { currentGuess[i] = ''; selectedIndex = i; }
-        }
-        renderBoard();
-        return;
-      }
-      if (sessionRemoved.includes(key)) return;
-      if (selectedIndex < len) {
-        currentGuess[selectedIndex] = key;                 // можно перезаписать даже открытую зелёную букву
-        selectedIndex = nextEmpty(selectedIndex + 1, len);
-      }
-      renderBoard();
-    }
-
-    function selectCell(i) {
-      const wordObj = globalState.words[activeWordId];
-      if (isGameOver(wordObj)) return;
-      selectedIndex = i; renderBoard();
-    }
-
-    function showGameMsg(msg) {
-      const el = document.getElementById('game-status-msg');
-      if (!el.dataset.base) el.dataset.base = el.innerText;
-      el.style.color = 'var(--rp-color)';
-      el.innerText = msg;
-      clearTimeout(window.__msgT);
-      window.__msgT = setTimeout(() => {
-        el.style.color = 'var(--accent-color)';
-        el.innerText = el.dataset.base; el.dataset.base = '';
-      }, 1600);
-    }
 
 
     // ---- Расходники, используемые прямо в игре ----
