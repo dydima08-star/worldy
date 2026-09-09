@@ -280,6 +280,7 @@
   <script src="js/dictionary.js"></script>
   <script src="js/config.js"></script>
   <script src="js/state.js"></script>
+  <script src="js/dom.js"></script>
   <script>
 
 
@@ -287,11 +288,6 @@
 
 
 
-    const screenMenu = document.getElementById('screen-menu');
-    const screenCreate = document.getElementById('screen-create');
-    const screenGame = document.getElementById('screen-game');
-    const screenShop = document.getElementById('screen-shop');
-    const screenStats = document.getElementById('screen-stats');
 
     // ПЕРЕХОД К ЭКРАНУ СОЗДАНИЯ СЛОВ
     document.getElementById('btn-go-create').addEventListener('click', () => {
@@ -351,12 +347,6 @@
     });
     
 
-    const screenMiner = document.getElementById('screen-miner');
-
-    function showScreen(sc) {
-      document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-      sc.classList.remove('hidden');
-    }
 
     function selectRole(role) {
       myRole = role;
