@@ -277,21 +277,11 @@
   <script src="js/auth.js"></script>
   <script src="js/firebase.js"></script>
   <script src="js/words-data.js"></script>
+  <script src="js/dictionary.js"></script>
   <script>
 
 
 
-    // Слова дня берём из основного пула (удобные длины 4-8 букв)
-    const DAILY_POOL = DAILY_WORDS_POOL.filter(w => w.length >= 4 && w.length <= 8);
-
-    // Единый словарь допустимых слов (нормализация: нижний регистр, ё -> е)
-    const VALID_WORDS = new Set(
-      [...DAILY_WORDS_POOL, ...EXTRA_WORDS].map(w => w.toLowerCase().replace(/ё/g, 'е'))
-    );
-    function isValidWord(w) {
-      const n = (w || '').toLowerCase().replace(/ё/g, 'е');
-      return VALID_WORDS.has(n);
-    }
 
     // ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
     let myRole = localStorage.getItem('wordle_role') ? parseInt(localStorage.getItem('wordle_role')) : null;
