@@ -274,14 +274,8 @@
     </div>
   </div>
 
+  <script src="js/auth.js"></script>
   <script>
-    // 1. ПРОВЕРКА ПИН-КОДА
-    const SECRET_PIN = "15130711";
-    let userPin = prompt("Введите ПИН-код для доступа к игре:");
-    if (userPin !== SECRET_PIN) {
-      document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:50px;'>Доступ закрыт!</h2>";
-      throw new Error("Неверный пин-код");
-    }
 
     // 2. FIREBASE
     const firebaseConfig = {
