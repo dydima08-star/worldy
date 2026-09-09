@@ -279,21 +279,12 @@
   <script src="js/words-data.js"></script>
   <script src="js/dictionary.js"></script>
   <script src="js/config.js"></script>
+  <script src="js/state.js"></script>
   <script>
 
 
 
 
-    // ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
-    let myRole = localStorage.getItem('wordle_role') ? parseInt(localStorage.getItem('wordle_role')) : null;
-    let globalState = null;
-    let activeWordId = null;
-    let currentGuess = [];      // текущая попытка как массив (буквы по позициям)
-    let selectedIndex = 0;      // активная клетка (для вставки в любое место)
-    let sessionGreens = {};    // {idx: буква} — открытые зелёные буквы (подсказка, но клетку можно перезаписать)
-    let sessionPresent = [];    // буквы-подсказки (оранжевые)
-    let sessionRemoved = [];    // серые буквы, убранные с клавиатуры
-    let sessionExtraAttempts = 0;
 
 
     const screenMenu = document.getElementById('screen-menu');
@@ -832,7 +823,6 @@
     }
 
     // МАГАЗИН И ПОКУПКИ
-    let currentShopFilter = 'all';
 
     document.getElementById('btn-go-shop').addEventListener('click', () => {
       renderShop();
@@ -1045,7 +1035,6 @@
 
     function closeDailyBonus() { document.getElementById('bonus-modal').classList.add('hidden'); }
 
-    let isSpinning = false;
 
     // Взвешенный выбор награды: чем больше значение, тем меньше шанс (см. chance)
     function pickWeightedReward() {
@@ -1533,7 +1522,6 @@
     }
 
     // ================= СТАТИСТИКА ИГРОКА =================
-    let currentStatsPlayer = 1;
 
     function showPlayerStats(playerNum) {
       console.log('=== showPlayerStats вызван ===');
