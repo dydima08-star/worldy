@@ -1,0 +1,148 @@
+// Wordle Duo — экран статистики игрока: ранг, победы/поражения, распределение по попыткам.
+// Перенесено из index.html без изменений: строки 4072-4072, 4075-4213.
+
+// Предохранитель: в исходнике throw при неверном ПИНе обрывал весь <script>.
+// После разбиения на файлы каждый файл обрывает себя сам — поведение то же.
+if (window.__wordleAccessDenied) throw new Error("Неверный пин-код");
+
+    // ================= СТАТИСТИКА ИГРОКА =================
+
+    function showPlayerStats(playerNum) {
+      console.log('=== showPlayerStats вызван ===');
+      console.log('playerNum:', playerNum);
+      console.log('currentStatsPlayer до обновления:', currentStatsPlayer);
+
+      currentStatsPlayer = playerNum;
+      console.log('currentStatsPlayer после обновления:', currentStatsPlayer);
+
+      // Обновляем кнопки переключателя
+      document.getElementById('stats-btn-p1').style.background = playerNum === 1 ? 'var(--accent-color)' : '#272729';
+      document.getElementById('stats-btn-p1').style.color = playerNum === 1 ? 'white' : '#aaa';
+      document.getElementById('stats-btn-p1').style.border = playerNum === 1 ? 'none' : '1px solid var(--border-color)';
+
+      document.getElementById('stats-btn-p2').style.background = playerNum === 2 ? 'var(--accent-color)' : '#272729';
+      document.getElementById('stats-btn-p2').style.color = playerNum === 2 ? 'white' : '#aaa';
+      document.getElementById('stats-btn-p2').style.border = playerNum === 2 ? 'none' : '1px solid var(--border-color)';
+
+      // Проверяем наличие globalState
+      if (!globalState) {
+        document.getElementById('stats-container').innerHTML = '<div style="text-align: center; padding: 30px; color: #888;">Загрузка данных...</div>';
+        return;
+      }
+
+      // Собираем статистику из базы
+      const allWords = Object.values(globalState.words || {});
+      console.log('Все слова:', allWords);
+      console.log('Фильтруем по target:', playerNum);
+      const playerWords = allWords.filter(w => w.target === playerNum && w.status === 'completed');
+      console.log('Отфильтрованные слова игрока', playerNum, ':', playerWords);
+
+      const wins = playerWords.filter(w => {
+        if (!w.attempts || w.attempts.length === 0) return false;
+        const lastAttempt = w.attempts[w.attempts.length - 1];
+        return lastAttempt && Array.isArray(lastAttempt) && lastAttempt.every((tile, i) => tile.state === 'correct');
+      }).length;
+
+      const losses = playerWords.length - wins;
+      const winRate = playerWords.length > 0 ? Math.round((wins / playerWords.length) * 100) : 0;
+
+      // Распределение по попыткам
+      const attemptsDistribution = [0, 0, 0, 0, 0, 0, 0, 0]; // 1-8 попыток
+      playerWords.forEach(w => {
+        if (w.attempts && w.attempts.length > 0) {
+          const lastAttempt = w.attempts[w.attempts.length - 1];
+          const isWin = lastAttempt && Array.isArray(lastAttempt) && lastAttempt.every((tile, i) => tile.state === 'correct');
+          if (isWin && w.attempts.length <= 8) {
+            attemptsDistribution[w.attempts.length - 1]++;
+          }
+        }
+      });
+
+      // Средняя длина слова
+      const avgLength = playerWords.length > 0
+        ? (playerWords.reduce((sum, w) => sum + (w.len || 0), 0) / playerWords.length).toFixed(1)
+        : 0;
+
+      // Текущий ранг
+      const playerRP = globalState.rp?.[playerNum] || 0;
+      const rank = getRankByRP(playerRP);
+
+      // Рекорд комбо (максимальное комбо за сезон - нужно хранить в БД)
+      const maxCombo = globalState.maxCombo?.[playerNum] || (globalState.combos?.[playerNum] || 0);
+
+      // Рендерим статистику
+      const container = document.getElementById('stats-container');
+      container.innerHTML = `
+        <div style="text-align: center; margin-bottom: 20px;">
+          <div style="font-size: 3rem; margin-bottom: 5px;">${rank.icon}</div>
+          <div style="font-size: 1.3rem; font-weight: bold; color: ${rank.color};">${rank.name}</div>
+          <div style="font-size: 0.85rem; color: #888; margin-top: 3px;">${playerRP} RP</div>
+          ${rank.maxRP !== Infinity ? `<div style="font-size: 0.75rem; color: #666;">До ${RANKS[RANKS.indexOf(rank) + 1].name}: ${RANKS[RANKS.indexOf(rank) + 1].minRP - playerRP} RP</div>` : ''}
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+          <div style="background: #272729; padding: 12px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 1.8rem; font-weight: bold; color: #2ecc71;">${wins}</div>
+            <div style="font-size: 0.8rem; color: #aaa;">Победы</div>
+          </div>
+          <div style="background: #272729; padding: 12px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 1.8rem; font-weight: bold; color: #e74c3c;">${losses}</div>
+            <div style="font-size: 0.8rem; color: #aaa;">Поражения</div>
+          </div>
+        </div>
+
+        <div style="background: #272729; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span style="font-size: 0.85rem; color: #aaa;">Процент побед</span>
+            <span style="font-size: 0.9rem; font-weight: bold; color: ${winRate >= 70 ? '#2ecc71' : winRate >= 50 ? '#f39c12' : '#e74c3c'};">${winRate}%</span>
+          </div>
+          <div style="width: 100%; height: 8px; background: #1a1a1b; border-radius: 4px; overflow: hidden;">
+            <div style="width: ${winRate}%; height: 100%; background: linear-gradient(90deg, #2ecc71, #27ae60); transition: width 0.3s;"></div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 15px;">
+          <div style="background: #272729; padding: 10px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 1.3rem; font-weight: bold; color: #4ab8e2;">${playerWords.length}</div>
+            <div style="font-size: 0.75rem; color: #aaa;">Всего игр</div>
+          </div>
+          <div style="background: #272729; padding: 10px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 1.3rem; font-weight: bold; color: #9b59b6;">${avgLength}</div>
+            <div style="font-size: 0.75rem; color: #aaa;">Ср. длина</div>
+          </div>
+          <div style="background: #272729; padding: 10px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 1.3rem; font-weight: bold; color: #ff9f43;">${maxCombo}/5</div>
+            <div style="font-size: 0.75rem; color: #aaa;">Рекорд комбо</div>
+          </div>
+        </div>
+
+        <div style="background: #272729; padding: 12px; border-radius: 8px;">
+          <div style="font-size: 0.9rem; font-weight: bold; margin-bottom: 10px; color: #fff;">📈 Распределение побед по попыткам</div>
+          ${attemptsDistribution.map((count, i) => {
+            const maxCount = Math.max(...attemptsDistribution);
+            const percent = maxCount > 0 ? (count / maxCount) * 100 : 0;
+            return `
+              <div style="display: flex; align-items: center; margin-bottom: 6px;">
+                <div style="width: 25px; font-size: 0.8rem; color: #aaa;">${i + 1}</div>
+                <div style="flex: 1; height: 20px; background: #1a1a1b; border-radius: 4px; overflow: hidden; margin: 0 8px;">
+                  <div style="width: ${percent}%; height: 100%; background: linear-gradient(90deg, #4ab8e2, #357abd); display: flex; align-items: center; justify-content: flex-end; padding-right: 5px;">
+                    ${count > 0 ? `<span style="font-size: 0.75rem; color: #fff; font-weight: bold;">${count}</span>` : ''}
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+
+      // Обновляем видимость и текст кнопки подарка
+      const giftBtn = document.getElementById('btn-gift-coins');
+
+      // Показываем кнопку только если смотрим на соперника
+      if (playerNum !== myRole) {
+        giftBtn.style.display = 'block';
+        giftBtn.innerHTML = `🎁 Подарить монеты Игроку ${playerNum}`;
+      } else {
+        giftBtn.style.display = 'none';
+      }
+    }
