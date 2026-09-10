@@ -82,6 +82,8 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
     }
 
     function renderHistory() {
+      renderAchievements(currentHistoryPlayer);
+
       const list = document.getElementById('history-list');
       if (!globalState) {
         list.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">Загрузка данных...</div>';

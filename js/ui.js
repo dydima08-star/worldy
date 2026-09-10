@@ -89,6 +89,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         document.getElementById(`p${p}-score`).innerText = data.score?.[p] || 0;
         document.getElementById(`p${p}-coins`).innerText = `${data.coins?.[p] || 0} 🪙`;
         document.getElementById(`p${p}-combo`).textContent = `🔥 Комбо: ${data.combos?.[p] || 0}/5`;
+        document.getElementById(`p${p}-streak`).textContent = `📆 Серия: ${computeStreaks(data.history?.[p] || {}).dayStreak} дн.`;
       });
 
       // Корона победителю
@@ -110,4 +111,5 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       if (!screenShop.classList.contains('hidden')) renderShop();
       if (!screenGame.classList.contains('hidden') && activeWordId) renderBoard();
       if (!screenMiner.classList.contains('hidden')) renderMiner();
+      if (!document.getElementById('screen-history').classList.contains('hidden')) renderHistory();
     }

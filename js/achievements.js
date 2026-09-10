@@ -130,3 +130,25 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         });
       }
     }
+
+    // Полка достижений на экране истории — своя или соперника (playerNum как в showHistoryFor)
+    function renderAchievements(playerNum) {
+      const grid = document.getElementById('achievements-grid');
+      if (!grid) return;
+
+      const unlocked = globalState?.achievements?.[playerNum] || {};
+      grid.innerHTML = ACHIEVEMENTS.map(a => {
+        const got = unlocked[a.id];
+        const boxStyle = got
+          ? 'background:#272729; border:2px solid var(--gold-color); color:#fff;'
+          : 'background:#1a1a1b; border:2px solid var(--border-color); color:#666;';
+        const dateLabel = (got && got !== true) ? `<div style="font-size:0.6rem; color:#999; margin-top:2px;">${got}</div>` : '';
+        return `
+          <div title="${a.name}: ${a.desc}" style="${boxStyle} border-radius:8px; padding:8px 4px; text-align:center;">
+            <div style="font-size:1.4rem; ${got ? '' : 'filter:grayscale(1); opacity:0.5;'}">${a.icon}</div>
+            <div style="font-size:0.62rem; margin-top:3px; line-height:1.15;">${a.name}</div>
+            ${dateLabel}
+          </div>
+        `;
+      }).join('');
+    }

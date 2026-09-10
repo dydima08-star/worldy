@@ -39,6 +39,7 @@
         <div style="font-size: 0.9rem; color: #4ab8e2; margin: 2px 0;">Очки: <span id="p1-score">0</span> 🎯</div>
         <div id="p1-coins" class="player-coins">0 M</div>
         <div id="p1-combo" class="player-combo">🔥 Комбо: 0/5</div>
+        <div id="p1-streak" class="player-combo">📆 Серия: 0 дн.</div>
       </div>
       <div id="p2-card" class="player-card">
         <div id="p2-crown" class="crown">👑</div>
@@ -47,6 +48,7 @@
         <div style="font-size: 0.9rem; color: #4ab8e2; margin: 2px 0;">Очки: <span id="p2-score">0</span> 🎯</div>
         <div id="p2-coins" class="player-coins">0 M</div>
         <div id="p2-combo" class="player-combo">🔥 Комбо: 0/5</div>
+        <div id="p2-streak" class="player-combo">📆 Серия: 0 дн.</div>
       </div>
     </div>
   </header>
@@ -215,6 +217,11 @@
 
       <div id="history-list" style="display:flex; flex-direction:column; gap:8px;"></div>
       <button id="history-load-more" onclick="loadMoreHistory()" class="secondary hidden" style="margin-top:10px;">Показать ещё</button>
+
+      <div id="history-achievements" style="margin-top:16px;">
+        <h3 style="font-size:1rem; margin-bottom:10px; color:#ddd; border-bottom:1px solid var(--border-color); padding-bottom:6px;">🏅 Достижения</h3>
+        <div id="achievements-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap:8px;"></div>
+      </div>
 
       <button onclick="showScreen(screenMenu)" class="secondary" style="margin-top: 15px;">⬅️ Вернуться в меню</button>
     </div>
