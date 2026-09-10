@@ -32,13 +32,13 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       });
 
       if (invalidWords.length) {
-        alert('Эти слова нельзя загадать:\n• ' + invalidWords.join('\n• ') + '\n\nЗагадывайте только слова из словаря игры.');
+        showAlert('Эти слова нельзя загадать', '<ul style="margin-left:18px;">' + invalidWords.map(w => `<li>${w}</li>`).join('') + '</ul><p style="margin-top:10px;">Загадывайте только слова из словаря игры.</p>');
         return;
       }
 
       // Если игрок пытается отправить больше, чем разрешено (всего 7 в день)
       if (myWordsToday.length + wordsToAdd.length > 7) {
-        alert(`Лимит исчерпан! Вы уже загадали ${myWordsToday.length} слов(а) сегодня. Можно добавить еще максимум ${7 - myWordsToday.length}.`);
+        showAlert('Лимит на сегодня', `Вы уже загадали ${myWordsToday.length} слов(а) сегодня. Можно добавить еще максимум ${7 - myWordsToday.length}.`);
         return;
       }
 

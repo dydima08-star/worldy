@@ -21,26 +21,26 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       const targetPlayer = currentStatsPlayer;
 
       if (myCoins < amount) {
-        alert(`У вас недостаточно монет! Нужно ${amount}, а у вас ${myCoins} 🪙`);
+        showToast(`У вас недостаточно монет! Нужно ${amount}, а у вас ${myCoins} 🪙`, 'err');
         return;
       }
 
       if (targetPlayer === myRole) {
-        alert('Нельзя подарить монеты самому себе! 😅');
+        showToast('Нельзя подарить монеты самому себе! 😅', 'warn');
         return;
       }
 
-      if (!confirm(`Подарить ${amount} 🪙 монет Игроку ${targetPlayer}?`)) {
-        return;
-      }
+      showConfirm('Подарить монеты?', `Подарить ${amount} 🪙 монет Игроку ${targetPlayer}?`, 'Подарить').then(ok => {
+        if (!ok) return;
 
-      const targetCoins = globalState?.coins?.[targetPlayer] || 0;
+        const targetCoins = globalState?.coins?.[targetPlayer] || 0;
 
-      db.ref().update({
-        [`wordle_season_v1/coins/${myRole}`]: myCoins - amount,
-        [`wordle_season_v1/coins/${targetPlayer}`]: targetCoins + amount
+        db.ref().update({
+          [`wordle_season_v1/coins/${myRole}`]: myCoins - amount,
+          [`wordle_season_v1/coins/${targetPlayer}`]: targetCoins + amount
+        });
+
+        showToast(`✅ Вы подарили ${amount} 🪙 Игроку ${targetPlayer}!`, 'ok');
+        closeGiftModal();
       });
-
-      alert(`✅ Вы подарили ${amount} 🪙 Игроку ${targetPlayer}!`);
-      closeGiftModal();
     }
