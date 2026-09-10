@@ -30,18 +30,20 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         return;
       }
 
-      // Собираем статистику из базы
-      const allWords = Object.values(globalState.words || {});
-      console.log('Все слова:', allWords);
-      console.log('Фильтруем по target:', playerNum);
-      const playerWords = allWords.filter(w => w.target === playerNum && w.status === 'completed');
-      console.log('Отфильтрованные слова игрока', playerNum, ':', playerWords);
+      // Собираем статистику: постоянная история (history) + сегодняшние completed-слова,
+      // которые чистка ещё не удалила и которые ещё не попали в историю (слияние по id слова)
+      const historyEntries = globalState.history?.[playerNum] || {};
+      const mergedWords = {};
+      Object.entries(historyEntries).forEach(([id, h]) => { mergedWords[id] = h; });
+      Object.entries(globalState.words || {}).forEach(([id, w]) => {
+        if (w.target === playerNum && w.status === 'completed' && !mergedWords[id]) {
+          mergedWords[id] = { len: w.len, attempts: (w.attempts || []).length, win: isSolved(w), date: w.date, author: w.author };
+        }
+      });
+      const playerWords = Object.values(mergedWords);
+      console.log('Слова игрока', playerNum, '(история + сегодняшние):', playerWords);
 
-      const wins = playerWords.filter(w => {
-        if (!w.attempts || w.attempts.length === 0) return false;
-        const lastAttempt = w.attempts[w.attempts.length - 1];
-        return lastAttempt && Array.isArray(lastAttempt) && lastAttempt.every((tile, i) => tile.state === 'correct');
-      }).length;
+      const wins = playerWords.filter(w => w.win).length;
 
       const losses = playerWords.length - wins;
       const winRate = playerWords.length > 0 ? Math.round((wins / playerWords.length) * 100) : 0;
@@ -49,12 +51,8 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       // Распределение по попыткам
       const attemptsDistribution = [0, 0, 0, 0, 0, 0, 0, 0]; // 1-8 попыток
       playerWords.forEach(w => {
-        if (w.attempts && w.attempts.length > 0) {
-          const lastAttempt = w.attempts[w.attempts.length - 1];
-          const isWin = lastAttempt && Array.isArray(lastAttempt) && lastAttempt.every((tile, i) => tile.state === 'correct');
-          if (isWin && w.attempts.length <= 8) {
-            attemptsDistribution[w.attempts.length - 1]++;
-          }
+        if (w.win && w.attempts >= 1 && w.attempts <= 8) {
+          attemptsDistribution[w.attempts - 1]++;
         }
       });
 

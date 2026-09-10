@@ -198,7 +198,14 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
           [`wordle_season_v1/coins/${myRole}`]: newCoins,
           [`wordle_season_v1/combos/${myRole}`]: newCombo,
           [`wordle_season_v1/words/${activeWordId}/status`]: 'completed',
-          [`wordle_season_v1/words/${activeWordId}/attempts`]: attempts
+          [`wordle_season_v1/words/${activeWordId}/attempts`]: attempts,
+          [`wordle_season_v1/history/${wordObj.target}/${activeWordId}`]: {
+            len: wordObj.len,
+            attempts: attempts.length,
+            win: isWin,
+            date: wordObj.date || new Date().toISOString().slice(0, 10),
+            author: wordObj.author
+          }
         });
 
         document.getElementById('result-title').innerText = isWin ? '🎉 Победа!' : '❌ Поражение!';

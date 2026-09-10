@@ -76,6 +76,28 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       document.getElementById('season-timer').innerText = `${d}д ${h}ч ${m}м`;
     }, 1000);
 
+    // Разовая миграция: переносим уже завершённые слова в постоянную историю (history),
+    // чтобы их не потеряла суточная чистка старых слов в words.js. Один раз за загрузку страницы,
+    // идемпотентно — пропускает слова, уже перенесённые в history.
+    let __historyMigrated = false;
+    function migrateWordsToHistory(data) {
+      if (__historyMigrated) return;
+      __historyMigrated = true;
+      const updates = {};
+      Object.entries(data.words || {}).forEach(([id, w]) => {
+        if (w.status !== 'completed' || !w.target) return;
+        if (data.history?.[w.target]?.[id]) return;
+        updates[`wordle_season_v1/history/${w.target}/${id}`] = {
+          len: w.len,
+          attempts: (w.attempts || []).length,
+          win: isSolved(w),
+          date: w.date || new Date().toISOString().slice(0, 10),
+          author: w.author
+        };
+      });
+      if (Object.keys(updates).length) db.ref().update(updates);
+    }
+
     // Слушатель БД и логика сброса месяца
     gameRef.on('value', (snapshot) => {
       let data = snapshot.val();
@@ -90,6 +112,8 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         renderUI(data);
         return;
       }
+
+      migrateWordsToHistory(data);
 
       if (data.seasonInfo?.lastReset !== currentMonthStr) {
         let p1RP = data.rp?.[1] || 0;
