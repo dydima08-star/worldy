@@ -162,7 +162,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       if (!myRole) return;
       const myCoins = globalState?.coins?.[myRole] || 0;
       if (myCoins < MINER_COST) {
-        alert(`Недостаточно монет! Требуется ${MINER_COST.toLocaleString()} 🪙`);
+        showToast(`Недостаточно монет! Требуется ${MINER_COST.toLocaleString()} 🪙`, 'err');
         return;
       }
 
@@ -176,7 +176,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         [`wordle_season_v1/miner/${myRole}/accumulatedCoins`]: 0,
         [`wordle_season_v1/miner/${myRole}/lastCollectTime`]: now
       });
-      alert('✅ Майнер успешно куплен! Он начал работу.');
+      showToast('✅ Майнер успешно куплен! Он начал работу.', 'ok');
     }
 
     function collectMinerCoins() {
@@ -202,7 +202,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       const elapsed = now - startTime;
 
       if (elapsed >= workMs) {
-        alert('⚠️ Майнер сейчас отдыхает! Подождите, пока он снова начнёт работать.');
+        showToast('⚠️ Майнер сейчас отдыхает! Подождите, пока он снова начнёт работать.', 'warn');
         return;
       }
 
@@ -214,7 +214,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       const accumulated = Math.floor((workElapsed / (60 * 60 * 1000)) * coinsPerHour);
 
       if (accumulated === 0) {
-        alert('⚠️ Майнер ещё не накопил монеты. Подождите немного!');
+        showToast('⚠️ Майнер ещё не накопил монеты. Подождите немного!', 'warn');
         return;
       }
 
@@ -225,7 +225,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         [`wordle_season_v1/miner/${myRole}/lastCollectTime`]: cappedNow
       });
 
-      alert(`✅ Собрано ${accumulated} 🪙 с майнера!`);
+      showToast(`✅ Собрано ${accumulated} 🪙 с майнера!`, 'ok');
     }
 
     function upgradeMinerEarning(targetLevel) {
@@ -249,7 +249,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
 
       const myCoins = globalState?.coins?.[myRole] || 0;
       if (myCoins < upgrade.price) {
-        alert(`Недостаточно монет! Требуется ${upgrade.price.toLocaleString()} 🪙`);
+        showToast(`Недостаточно монет! Требуется ${upgrade.price.toLocaleString()} 🪙`, 'err');
         return;
       }
 
@@ -258,7 +258,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         [`wordle_season_v1/miner/${myRole}/earningLevel`]: targetLevel
       });
 
-      alert(`✅ Доход майнера улучшен до ${upgrade.coinsPerHour} 🪙/час!`);
+      showToast(`✅ Доход майнера улучшен до ${upgrade.coinsPerHour} 🪙/час!`, 'ok');
     }
 
     function upgradeMinerBattery(targetLevel) {
@@ -272,7 +272,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       const myCoins = globalState?.coins?.[myRole] || 0;
 
       if (myCoins < upgrade.price) {
-        alert(`Недостаточно монет! Требуется ${upgrade.price.toLocaleString()} 🪙`);
+        showToast(`Недостаточно монет! Требуется ${upgrade.price.toLocaleString()} 🪙`, 'err');
         return;
       }
 
@@ -285,5 +285,5 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         [`wordle_season_v1/miner/${myRole}/lastCollectTime`]: now
       });
 
-      alert(`✅ Батарея улучшена! Теперь ${upgrade.workHours}ч работы / ${upgrade.restHours}ч отдыха.`);
+      showToast(`✅ Батарея улучшена! Теперь ${upgrade.workHours}ч работы / ${upgrade.restHours}ч отдыха.`, 'ok');
     }

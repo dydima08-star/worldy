@@ -128,25 +128,36 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       const item = SHOP_ITEMS.find(i => i.id === id);
       if (!item) return;
       const myCoins = globalState?.coins?.[myRole] || 0;
-      if (myCoins < item.price) { alert('Недостаточно монет!'); return; }
+      if (myCoins < item.price) { showToast('Недостаточно монет!', 'err'); return; }
 
-      const invRef = `wordle_season_v1/inventory/${myRole}/${id}`;
+      // Дорогая покупка (от 10000 монет) — подтверждение, чтобы не списать монеты случайным кликом
+      if (item.price >= 10000) {
+        showConfirm('Подтвердите покупку', `«${item.name}» за ${item.price.toLocaleString()} 🪙?`, 'Купить').then(ok => {
+          if (ok) completeBuyItem(item, myCoins);
+        });
+        return;
+      }
+      completeBuyItem(item, myCoins);
+    }
+
+    function completeBuyItem(item, myCoins) {
+      const invRef = `wordle_season_v1/inventory/${myRole}/${item.id}`;
       const now = getNow();
 
       if (item.type === 'permanent') {
         if (isActive(item)) return;
         db.ref(invRef).set(true);
       } else if (item.type === 'daily') {
-        const cur = invEntry(id);
+        const cur = invEntry(item.id);
         const base = (cur && cur.until > now) ? cur.until : now;
         db.ref(invRef).set({ until: base + 24 * 60 * 60 * 1000 });
       } else if (item.type === 'weekly') {
-        const cur = invEntry(id);
+        const cur = invEntry(item.id);
         const base = (cur && cur.until > now) ? cur.until : now;
         db.ref(invRef).set({ until: base + 7 * 24 * 60 * 60 * 1000 });
       } else if (item.type === 'consumable') {
-        const qty = CONSUMABLE_QTY[id] || 1;
-        const cur = invEntry(id);
+        const qty = CONSUMABLE_QTY[item.id] || 1;
+        const cur = invEntry(item.id);
         const curCount = (cur && typeof cur === 'object') ? (cur.count || 0) : 0;
         db.ref(invRef).set({ count: curCount + qty });
       }
@@ -160,7 +171,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
     function exchangeRP(pointsCost, coinsGain) {
       const myScore = globalState?.score?.[myRole] || 0;
       if (myScore < pointsCost) {
-        alert(`Недостаточно очков! У вас ${myScore}, а требуется ${pointsCost}.`);
+        showToast(`Недостаточно очков! У вас ${myScore}, а требуется ${pointsCost}.`, 'err');
         return;
       }
 
@@ -175,7 +186,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         [`wordle_season_v1/coins/${myRole}`]: myCoins + finalGain
       });
 
-      alert(`Успешный обмен! Получено +${finalGain} 🪙` + (bonus > 0 ? ` (в т.ч. +${bonus} бонус от улучшений)` : ''));
+      showToast(`Успешный обмен! Получено +${finalGain} 🪙` + (bonus > 0 ? ` (в т.ч. +${bonus} бонус)` : ''), 'ok');
       renderShop();
       closeExchange();
     }
