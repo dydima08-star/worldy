@@ -37,12 +37,12 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       const A = id => isActiveById(id);
       const len = wordObj.len;
       const addIdx = i => { if (i < len) eff.greenIdx.add(i); };
-      if (A('perm_pos1') || A('week_pos1')) addIdx(0);
+      if (A('perm_pos1')) addIdx(0);
       if (A('perm_pos2')) addIdx(1);
       if (A('perm_pos3')) addIdx(2);
       if (A('day_pos4')) addIdx(3);
       if (A('day_pos5')) addIdx(4);
-      if (A('perm_double_start')) eff.greenRandom += 2;
+      if (A('day_long_start') && len >= 7) addIdx(0);
       if (A('perm_orange1')) eff.orange += 1;
       if (A('perm_orange2')) eff.orange += 2;
       if (A('day_orange_boom')) eff.orange += 3;
@@ -75,8 +75,18 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       }
       pickRandom(candidates, eff.orange).forEach(l => sessionPresent.push(l));
 
+      // Редкий подбор: буквы Ъ, Ь, Э подсвечиваются автоматически, если есть в слове
+      if (isActiveById('perm_rare_detect')) {
+        ['Ъ', 'Ь', 'Э'].forEach(l => { if (secret.includes(l) && !sessionPresent.includes(l) && !greenLetters.has(l)) sessionPresent.push(l); });
+      }
+
       const notInWord = RUS_ALPHABET.filter(l => !secret.includes(l));
       sessionRemoved = pickRandom(notInWord, eff.gray);
+
+      // Чистый лист: буквы Ъ, Ь убираются с клавиатуры, если их нет в слове
+      if (isActiveById('day_clean_sheet')) {
+        ['Ъ', 'Ь'].forEach(l => { if (!secret.includes(l) && !sessionRemoved.includes(l)) sessionRemoved.push(l); });
+      }
     }
 
     function startWord(id) {
@@ -161,11 +171,11 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
           const activeBoost = globalState?.boosts?.[myRole];
           if (activeBoost && activeBoost.until > Date.now()) boostMult = activeBoost.mult;
           pointsEarned = Math.round(rpChange * boostMult * rew.pointMult);
+          if (isActiveById('week_giant_hunter') && wordObj.len >= 7) pointsEarned *= 2;
         } else {
           // Штраф за поражение с учётом улучшений магазина
           let penalty = 300;
           if (isActiveById('day_zero_risk') || isActiveById('week_credit')) penalty = 0;
-          else if (isActiveById('day_anti_penalty')) penalty = Math.round(penalty * 0.5);
           rpChange = -penalty; pointsEarned = 0; coinsEarned = 0;
 
           const today = new Date().toISOString().slice(0, 10);

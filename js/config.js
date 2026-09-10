@@ -29,6 +29,8 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       { id: 'perm_gray1', type: 'permanent', name: 'Разведка I (1 серая)', desc: 'Навсегда: 1 серая буква убирается в начале игры.', price: 8000, catName: 'Навсегда' },
       { id: 'perm_gray2', type: 'permanent', name: 'Разведка II (2 серые)', desc: 'Навсегда: 2 серые буквы убираются на старте.', price: 15000, catName: 'Навсегда' },
       { id: 'perm_gray3', type: 'permanent', name: 'Разведка III (3 серые)', desc: 'Навсегда: 3 серые буквы убираются на старте.', price: 30000, catName: 'Навсегда' },
+      { id: 'perm_pos1', type: 'permanent', name: 'Первый шаг: Позиция 1', desc: 'Навсегда: 1-я буква всегда сразу открыта зелёным.', price: 60000, catName: 'Навсегда' },
+      { id: 'perm_pos2', type: 'permanent', name: 'Первый шаг: Позиция 2', desc: 'Навсегда: 2-я буква всегда сразу открыта зелёным.', price: 54000, catName: 'Навсегда' },
       { id: 'perm_pos3', type: 'permanent', name: 'Первый шаг: Позиция 3', desc: 'Навсегда: 3-я буква всегда сразу открыта зелёным.', price: 48000, catName: 'Навсегда' },
       { id: 'perm_orange1', type: 'permanent', name: 'Сигнал I (1 оранжевая)', desc: 'Навсегда: 1 оранжевая буква подсвечена на старте.', price: 31500, catName: 'Навсегда' },
       { id: 'perm_orange2', type: 'permanent', name: 'Сигнал II (2 оранжевые)', desc: 'Навсегда: 2 оранжевые буквы подсвечены на старте.', price: 62000, catName: 'Навсегда' },
@@ -49,7 +51,6 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       { id: 'day_clean_sheet', type: 'daily', name: 'Чистый лист', desc: '24 часа: Буквы Ъ и Ь убираются, если их нет в слове.', price: 100, catName: 'На день' },
       { id: 'day_morning_boost', type: 'daily', name: 'Утренний буст', desc: '24 часа: Первые 3 победы за день дают x2 очков.', price: 100, catName: 'На день' },
       { id: 'day_zero_risk', type: 'daily', name: 'Нулевой риск', desc: '24 часа: За поражения очковый штраф равен 0.', price: 40, catName: 'На день' },
-      { id: 'day_blitz_hunt', type: 'daily', name: 'Блиц-охота', desc: '24 часа: +150 монет за отгадывание быстрей 60 секунд.', price: 500, catName: 'На день' },
       { id: 'day_night_fever', type: 'daily', name: 'Ночной азарт', desc: '24 часа: С 20:00 до 00:00 все очки умножаются на 1.5.', price: 210, catName: 'На день' },
 
       // --- КАТЕГОРИЯ: НА НЕДЕЛЮ ---

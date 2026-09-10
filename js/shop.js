@@ -118,7 +118,6 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       let coinMult = 1, pointMult = 1;
       if (isActiveById('perm_investor')) coinMult *= 1.15;
       if (isActiveById('day_double_reward')) coinMult *= 1.5;
-      if (isActiveById('week_gold_week')) coinMult *= 1.3;
       if (isActiveById('week_lord_title')) { coinMult *= 1.10; pointMult *= 1.10; }
       if (isActiveById('day_night_fever') && new Date().getHours() >= 20) pointMult *= 1.5;
       if (isActiveById('day_morning_boost') && new Date().getHours() < 12) pointMult *= 1.5;
