@@ -12,6 +12,18 @@
 </head>
 <body>
 
+  <!-- ЭКРАН-ЗАГЛУШКА ПИН-КОДА: виден по умолчанию, скрывается auth.js если ПИН уже подтверждён -->
+  <div id="pin-gate" class="modal-overlay" style="z-index:300;">
+    <div class="modal">
+      <h2>🔒 Доступ к игре</h2>
+      <p style="color:#aaa; margin: 10px 0; font-size:0.85rem;">Введите ПИН-код для входа</p>
+      <input type="password" id="pin-gate-input" inputmode="numeric" placeholder="ПИН-код"
+        style="width:100%; padding:12px; margin-bottom:10px; background:#272729; color:white; border:1px solid var(--border-color); border-radius:8px; text-align:center; font-size:1.1rem; letter-spacing:2px; box-sizing:border-box;">
+      <div id="pin-gate-error" style="color:var(--rp-color); font-size:0.85rem; min-height:1.2em; margin-bottom:8px;"></div>
+      <button id="pin-gate-submit">Войти</button>
+    </div>
+  </div>
+
   <header>
     <h1>Wordle Duo</h1>
     <div class="season-banner">
