@@ -21,3 +21,5 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
     let isSpinning = false;
 
     let currentStatsPlayer = 1;
+
+    let prevSnap = null;   // предыдущий слепок состояния для diffAndNotify() — см. notify.js

@@ -109,6 +109,8 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         gameRef.set(data);
         // Не возвращаемся, продолжаем рендерить UI с начальными данными
         globalState = data;
+        diffAndNotify(prevSnap, data);
+        prevSnap = snapshotDigest(data);
         renderUI(data);
         return;
       }
@@ -134,6 +136,8 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       }
 
       globalState = data;
+      diffAndNotify(prevSnap, data);
+      prevSnap = snapshotDigest(data);
       renderUI(data);
     });
 
