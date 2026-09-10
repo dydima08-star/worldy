@@ -33,7 +33,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       arr.forEach(w => {
         const card = document.createElement('div');
         card.className = 'word-card';
-        card.innerHTML = `<div><b>Слово от ${w.author === 'Система' ? 'Системы' : 'Игрока ' + w.author}</b><br><small>Длина: ${w.len} букв</small></div> <button style="width:auto; margin:0; padding:6px 12px;">Играть</button>`;
+        card.innerHTML = `<div><b>Слово от ${w.author === 'Система' ? 'Системы 📅' : playerName(w.author)}</b><br><small>Длина: ${w.len} букв</small></div> <button style="width:auto; margin:0; padding:6px 12px;">Играть</button>`;
         card.onclick = () => startWord(w.id);
         list.appendChild(card);
       });

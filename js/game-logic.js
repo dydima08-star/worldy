@@ -102,7 +102,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       msgEl.style.color = 'var(--accent-color)';
       msgEl.innerText = isGameOver(wObj)
         ? '✅ Это слово уже сыграно'
-        : (wObj.author === 'Система' ? '📅 Слово дня' : `Слово от Игрока ${wObj.author} (${wObj.len} букв)`);
+        : (wObj.author === 'Система' ? '📅 Слово дня' : `Слово от ${playerName(wObj.author)} (${wObj.len} букв)`);
       showScreen(screenGame);
       renderConsumableBar();
       renderBoard();

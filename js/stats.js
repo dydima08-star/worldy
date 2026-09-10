@@ -8,18 +8,15 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
     // ================= СТАТИСТИКА ИГРОКА =================
 
     function showPlayerStats(playerNum) {
-      console.log('=== showPlayerStats вызван ===');
-      console.log('playerNum:', playerNum);
-      console.log('currentStatsPlayer до обновления:', currentStatsPlayer);
-
       currentStatsPlayer = playerNum;
-      console.log('currentStatsPlayer после обновления:', currentStatsPlayer);
 
       // Обновляем кнопки переключателя
+      document.getElementById('stats-btn-p1').innerText = `${playerAvatar(1)} ${playerName(1)}`;
       document.getElementById('stats-btn-p1').style.background = playerNum === 1 ? 'var(--accent-color)' : '#272729';
       document.getElementById('stats-btn-p1').style.color = playerNum === 1 ? 'white' : '#aaa';
       document.getElementById('stats-btn-p1').style.border = playerNum === 1 ? 'none' : '1px solid var(--border-color)';
 
+      document.getElementById('stats-btn-p2').innerText = `${playerAvatar(2)} ${playerName(2)}`;
       document.getElementById('stats-btn-p2').style.background = playerNum === 2 ? 'var(--accent-color)' : '#272729';
       document.getElementById('stats-btn-p2').style.color = playerNum === 2 ? 'white' : '#aaa';
       document.getElementById('stats-btn-p2').style.border = playerNum === 2 ? 'none' : '1px solid var(--border-color)';
@@ -41,7 +38,6 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         }
       });
       const playerWords = Object.values(mergedWords);
-      console.log('Слова игрока', playerNum, '(история + сегодняшние):', playerWords);
 
       const wins = playerWords.filter(w => w.win).length;
 
@@ -139,7 +135,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       // Показываем кнопку только если смотрим на соперника
       if (playerNum !== myRole) {
         giftBtn.style.display = 'block';
-        giftBtn.innerHTML = `🎁 Подарить монеты Игроку ${playerNum}`;
+        giftBtn.innerHTML = `🎁 Подарить монеты ${playerName(playerNum)}`;
       } else {
         giftBtn.style.display = 'none';
       }

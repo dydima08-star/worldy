@@ -30,7 +30,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         return;
       }
 
-      showConfirm('Подарить монеты?', `Подарить ${amount} 🪙 монет Игроку ${targetPlayer}?`, 'Подарить').then(ok => {
+      showConfirm('Подарить монеты?', `Подарить ${amount} 🪙 монет ${playerName(targetPlayer)}?`, 'Подарить').then(ok => {
         if (!ok) return;
 
         const targetCoins = globalState?.coins?.[targetPlayer] || 0;
@@ -40,7 +40,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
           [`wordle_season_v1/coins/${targetPlayer}`]: targetCoins + amount
         });
 
-        showToast(`✅ Вы подарили ${amount} 🪙 Игроку ${targetPlayer}!`, 'ok');
+        showToast(`✅ Вы подарили ${amount} 🪙 ${playerName(targetPlayer)}!`, 'ok');
         closeGiftModal();
       });
     }
