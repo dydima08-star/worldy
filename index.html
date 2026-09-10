@@ -34,11 +34,15 @@
 
   <header>
     <h1>Wordle Duo</h1>
+    <div id="offline-banner" class="season-banner hidden" style="border-color: var(--rp-color); color: var(--rp-color);">
+      ⚠️ Оффлайн — данные от <span id="offline-banner-ts"></span>
+    </div>
+
     <div class="season-banner">
       Текущий сезон завершится через: <br>
       <span id="season-timer" class="season-timer">Загрузка...</span>
     </div>
-    
+
     <div class="scoreboard">
       <div id="p1-card" class="player-card">
         <div id="p1-crown" class="crown">👑</div>

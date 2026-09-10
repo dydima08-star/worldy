@@ -98,8 +98,46 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       if (Object.keys(updates).length) db.ref().update(updates);
     }
 
+    // ================= ОФФЛАЙН-ФОЛЛБЭК =================
+    // Без сети gameRef.on('value') может не сработать вообще (persistence не включена) —
+    // globalState останется null и меню будет пустым. Держим зеркало последнего снапшота
+    // в localStorage и, если за 1500мс не пришло ни одного события от Firebase, поднимаем
+    // его сами с плашкой «Оффлайн». Тосты/модалки для восстановленных данных не показываем —
+    // это не новое событие, а последнее известное состояние.
+    let __liveDataReceived = false;
+
+    function saveOfflineMirror(data) {
+      try { localStorage.setItem('wordle_snapshot_v1', JSON.stringify({ data, savedAt: Date.now() })); } catch (e) { /* приватный режим и т.п. — не критично */ }
+    }
+
+    function formatOfflineTs(ts) {
+      const d = new Date(ts);
+      const dd = String(d.getDate()).padStart(2, '0');
+      const months = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mm = String(d.getMinutes()).padStart(2, '0');
+      return `${dd} ${months[d.getMonth()]}, ${hh}:${mm}`;
+    }
+
+    setTimeout(() => {
+      if (__liveDataReceived) return;
+      let mirror = null;
+      try { mirror = JSON.parse(localStorage.getItem('wordle_snapshot_v1')); } catch (e) { mirror = null; }
+      if (!mirror || !mirror.data) return;   // восстанавливать нечего — оставляем как есть, ждём сеть
+
+      globalState = mirror.data;
+      prevSnap = snapshotDigest(mirror.data);
+      renderUI(mirror.data);
+
+      document.getElementById('offline-banner-ts').innerText = formatOfflineTs(mirror.savedAt);
+      document.getElementById('offline-banner').classList.remove('hidden');
+    }, 1500);
+
     // Слушатель БД и логика сброса месяца
     gameRef.on('value', (snapshot) => {
+      __liveDataReceived = true;
+      document.getElementById('offline-banner').classList.add('hidden');
+
       let data = snapshot.val();
       const now = new Date();
       const currentMonthStr = `${now.getFullYear()}-${now.getMonth() + 1}`;
@@ -111,6 +149,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         globalState = data;
         diffAndNotify(prevSnap, data);
         prevSnap = snapshotDigest(data);
+        saveOfflineMirror(data);
         renderUI(data);
         return;
       }
@@ -138,6 +177,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       globalState = data;
       diffAndNotify(prevSnap, data);
       prevSnap = snapshotDigest(data);
+      saveOfflineMirror(data);
       renderUI(data);
     });
 
