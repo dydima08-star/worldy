@@ -37,7 +37,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       const A = id => isActiveById(id);
       const len = wordObj.len;
       const addIdx = i => { if (i < len) eff.greenIdx.add(i); };
-      if (A('perm_pos1')) addIdx(0);
+      if (A('perm_pos1') || A('week_pos1')) addIdx(0);
       if (A('perm_pos2')) addIdx(1);
       if (A('perm_pos3')) addIdx(2);
       if (A('day_pos4')) addIdx(3);
@@ -156,6 +156,12 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         let newCombo = globalState.combos?.[myRole] || 0;
         let shieldUsedToday = false;
 
+        // Длительность партии — только если известно время старта (sessionStartTs сбрасывается
+        // при перезагрузке страницы, тогда ms не пишем, а не врём приблизительным значением)
+        const nowTs = getNow();
+        const ms = sessionStartTs ? (nowTs - sessionStartTs) : null;
+        let blitzCoins = 0, newBlitzCount = null;   // day_blitz_hunt: +150 монет за победу быстрее 60с, до 3 раз в сутки
+
         if (isWin) {
           const baseRP = wordObj.len * 60;
           const attemptMults = [1.8, 1.4, 1.2, 0.9, 0.7, 0.5, 0.4, 0.3];
@@ -166,8 +172,20 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
           rpChange = Math.round(baseRP * mult * cMult);
 
           const rew = rewardEffects();
-          // Монеты за отгаданное слово НЕ начисляются — монеты добываются только обменом очков.
+          // Монеты за отгаданное слово НЕ начисляются — монеты добываются только обменом очков,
+          // кроме единственного исключения ниже (day_blitz_hunt).
           coinsEarned = 0;
+
+          if (isActiveById('day_blitz_hunt') && ms !== null && ms < 60000) {
+            const today = getToday();
+            const blitzState = globalState?.lastBlitz?.[myRole];
+            const curCount = (blitzState && blitzState.date === today) ? (blitzState.count || 0) : 0;
+            if (curCount < 3) {
+              blitzCoins = 150;
+              newBlitzCount = curCount + 1;
+              coinsEarned += blitzCoins;
+            }
+          }
 
           let boostMult = 1.0;
           const activeBoost = globalState?.boosts?.[myRole];
@@ -193,11 +211,6 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         const newScore = Math.max(0, oldScore + pointsEarned);
         const newCoins = (globalState.coins?.[myRole] || 0) + coinsEarned;
 
-        // Длительность партии — только если известно время старта (sessionStartTs сбрасывается
-        // при перезагрузке страницы, тогда ms не пишем, а не врём приблизительным значением)
-        const nowTs = getNow();
-        const ms = sessionStartTs ? (nowTs - sessionStartTs) : null;
-
         const historyEntry = {
           len: wordObj.len,
           attempts: attempts.length,
@@ -219,6 +232,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
           [`wordle_season_v1/history/${wordObj.target}/${activeWordId}`]: historyEntry
         };
         if (shieldUsedToday) updates[`wordle_season_v1/comboShield/${myRole}`] = shieldUsedToday;
+        if (newBlitzCount !== null) updates[`wordle_season_v1/lastBlitz/${myRole}`] = { date: getToday(), count: newBlitzCount };
         db.ref().update(updates);
         checkAchievements();
 
@@ -229,6 +243,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
           `Очки: <b>+${pointsEarned} 🎯</b><br>` +
           `🔥 Комбо: <b>${newCombo}/5</b><br>` +
           (ms !== null ? `⏱ Время: <b>${formatDuration(ms)}</b><br>` : '') +
+          (blitzCoins > 0 ? `⚡ Блиц: <b>+${blitzCoins} 🪙</b><br>` : '') +
           `<span style="font-size:0.8rem;color:#888;">Монеты добываются обменом очков в магазине 💱</span>`;
         document.getElementById('result-modal').classList.remove('hidden');
         renderBoard();

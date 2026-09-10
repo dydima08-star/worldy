@@ -52,6 +52,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       { id: 'day_morning_boost', type: 'daily', name: 'Утренний буст', desc: '24 часа: Первые 3 победы за день дают x2 очков.', price: 100, catName: 'На день' },
       { id: 'day_zero_risk', type: 'daily', name: 'Нулевой риск', desc: '24 часа: За поражения очковый штраф равен 0.', price: 40, catName: 'На день' },
       { id: 'day_night_fever', type: 'daily', name: 'Ночной азарт', desc: '24 часа: С 20:00 до 00:00 все очки умножаются на 1.5.', price: 210, catName: 'На день' },
+      { id: 'day_blitz_hunt', type: 'daily', name: 'Охота на блиц', desc: '24 часа: +150 🪙 за победу быстрее 60 секунд (до 3 раз в сутки).', price: 500, catName: 'На день' },
 
       // --- КАТЕГОРИЯ: НА НЕДЕЛЮ ---
       { id: 'week_erudit', type: 'weekly', name: 'Набор Эрудита', desc: '7 дней: Подсвечены 1 серая + 1 оранжевая буква.', price: 1600, catName: 'На неделю' },
@@ -62,6 +63,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       { id: 'week_combo_freeze', type: 'weekly', name: 'Заморозка комбо', desc: '7 дней: Комбо не падает ниже 2/5 при поражении.', price: 1700, catName: 'На неделю' },
       { id: 'week_giant_hunter', type: 'weekly', name: 'Охотник за гигантами', desc: '7 дней: Двойные очки за угадывание слов 7+ букв.', price: 700, catName: 'На неделю' },
       { id: 'week_lord_title', type: 'weekly', name: 'Титул Лорда', desc: '7 дней: Неоновая рамка + 10% бонус ко всем наградам.', price: 300, catName: 'На неделю' },
+      { id: 'week_pos1', type: 'weekly', name: 'Недельная позиция 1', desc: '7 дней: 1-я буква всегда сразу открыта зелёным.', price: 3000, catName: 'На неделю' },
 
       // --- КАТЕГОРИЯ: РАЗОВЫЕ ТОВАРЫ ---
       { id: 'cons_target', type: 'consumable', name: 'Точечный прицел', desc: 'Разово: Выбираете позицию (1, 2 или 3) и открываете её.', price: 150, catName: 'Разовый' },

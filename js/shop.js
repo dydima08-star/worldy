@@ -24,9 +24,11 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       if (currentShopFilter === 'owned') { cont.style.display = 'block'; renderOwned(cont); return; }
       cont.style.display = 'grid';
 
-      const filteredItems = SHOP_ITEMS.filter(item =>
-        currentShopFilter === 'all' ? true : item.type === currentShopFilter
-      );
+      const filteredItems = SHOP_ITEMS.filter(item => {
+        // week_pos1 дублирует уже купленный perm_pos1 — прятать, чтобы не платили за то, что уже есть
+        if (item.id === 'week_pos1' && isActiveById('perm_pos1') && !isActive(item)) return false;
+        return currentShopFilter === 'all' ? true : item.type === currentShopFilter;
+      });
 
       if (filteredItems.length === 0) {
         cont.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:20px; color:#777;">Нет товаров в этой категории</div>';
