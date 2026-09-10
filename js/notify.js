@@ -6,6 +6,39 @@
 // После разбиения на файлы каждый файл обрывает себя сам — поведение то же.
 if (window.__wordleAccessDenied) throw new Error("Неверный пин-код");
 
+    // ================= БЕЙДЖ НЕПРОЧИТАННЫХ (заголовок вкладки + значок в меню) =================
+
+    let __unreadCount = 0;
+    const __baseTitle = document.title;
+
+    function __bumpUnread() {
+      if (!document.hidden) return;
+      __unreadCount++;
+      document.title = `(${__unreadCount}) ${__baseTitle}`;
+      __updateMenuBadge();
+    }
+
+    function __updateMenuBadge() {
+      const badge = document.getElementById('menu-unread-badge');
+      if (!badge) return;
+      if (__unreadCount > 0) { badge.innerText = __unreadCount; badge.classList.remove('hidden'); }
+      else badge.classList.add('hidden');
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        __unreadCount = 0;
+        document.title = __baseTitle;
+        __updateMenuBadge();
+      }
+    });
+
+    // Тост о событии от соперника: показывает тост и (если вкладка в фоне) считает его в бейдж
+    function notifyToast(text, type) {
+      showToast(text, type);
+      __bumpUnread();
+    }
+
     // Компактный слепок состояния для сравнения — не храним весь снапшот целиком
     function snapshotDigest(d) {
       return {
@@ -31,13 +64,13 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         const prevW = prev.words[id];
         if (!prevW) {
           if (w.target === myRole && w.status === 'pending' && w.author !== 'Система') {
-            showToast(`🎯 ${playerName(w.author)} загадал(а) вам слово из ${w.len} букв`, 'info');
+            notifyToast(`🎯 ${playerName(w.author)} загадал(а) вам слово из ${w.len} букв`, 'info');
           }
           return;
         }
         const n = (w.attempts || []).length;
         if (n > prevW.n && w.author === myRole) {
-          showToast(`✍️ ${playerName(opp)} сделал(а) ход по вашему слову (${n}/${MAX_ATTEMPTS})`, 'info');
+          notifyToast(`✍️ ${playerName(opp)} сделал(а) ход по вашему слову (${n}/${MAX_ATTEMPTS})`, 'info');
         }
       });
 
@@ -47,8 +80,8 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         if (prevHistOpp.has(id)) return;
         if (h.author !== myRole) return;
         const word = h.word || (h.len + ' букв');
-        if (h.win) showToast(`🎉 ${playerName(opp)} отгадал(а) ваше слово ${word} за ${h.attempts} попыток`, 'ok');
-        else showToast(`😈 ${playerName(opp)} не смог(ла) отгадать ${word}`, 'warn');
+        if (h.win) notifyToast(`🎉 ${playerName(opp)} отгадал(а) ваше слово ${word} за ${h.attempts} попыток`, 'ok');
+        else notifyToast(`😈 ${playerName(opp)} не смог(ла) отгадать ${word}`, 'warn');
       });
 
       // Соперник обогнал меня по RP (переход через границу)
@@ -57,14 +90,14 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       const prevMyRP = prev.rp[myRole] || 0;
       const prevOppRP = prev.rp[opp] || 0;
       if (prevOppRP <= prevMyRP && oppRP > myRP) {
-        showToast(`👑 ${playerName(opp)} вышел(шла) вперёд: ${oppRP} RP против ваших ${myRP}`, 'warn');
+        notifyToast(`👑 ${playerName(opp)} вышел(шла) вперёд: ${oppRP} RP против ваших ${myRP}`, 'warn');
       }
 
       // Подарок от соперника
       const prevGifts = new Set(prev.gifts || []);
       Object.entries(data.gifts?.[myRole] || {}).forEach(([id, g]) => {
         if (prevGifts.has(id)) return;
-        showToast(`🎁 ${playerName(g.from)} подарил(а) вам ${g.amount} 🪙`, 'ok');
+        notifyToast(`🎁 ${playerName(g.from)} подарил(а) вам ${g.amount} 🪙`, 'ok');
       });
 
       // Новое достижение соперника (achievements появятся в Э6 — до этого просто не сработает)
@@ -72,6 +105,6 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       Object.keys(data.achievements?.[opp] || {}).forEach(id => {
         if (prevAch.has(id)) return;
         const def = (typeof ACHIEVEMENTS !== 'undefined') ? ACHIEVEMENTS.find(a => a.id === id) : null;
-        showToast(`🏅 ${playerName(opp)} получил(а) достижение «${def ? def.name : id}»`, 'ok');
+        notifyToast(`🏅 ${playerName(opp)} получил(а) достижение «${def ? def.name : id}»`, 'ok');
       });
     }

@@ -34,10 +34,12 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         if (!ok) return;
 
         const targetCoins = globalState?.coins?.[targetPlayer] || 0;
+        const giftRef = gameRef.child('gifts').child(targetPlayer).push();
 
         db.ref().update({
           [`wordle_season_v1/coins/${myRole}`]: myCoins - amount,
-          [`wordle_season_v1/coins/${targetPlayer}`]: targetCoins + amount
+          [`wordle_season_v1/coins/${targetPlayer}`]: targetCoins + amount,
+          [`wordle_season_v1/gifts/${targetPlayer}/${giftRef.key}`]: { from: myRole, amount: amount, ts: getNow() }
         });
 
         showToast(`✅ Вы подарили ${amount} 🪙 ${playerName(targetPlayer)}!`, 'ok');
