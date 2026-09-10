@@ -258,3 +258,25 @@
     /* Тряска при неверном слове */
     @keyframes shake { 0%,100%{transform:translateX(0);} 20%{transform:translateX(-6px);} 40%{transform:translateX(6px);} 60%{transform:translateX(-4px);} 80%{transform:translateX(4px);} }
     .grid.shake { animation: shake 0.4s; }
+
+    /* Тосты (замена alert/confirm/prompt на телефоне) */
+    #toast-container { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 200; display: flex; flex-direction: column-reverse; gap: 8px; width: calc(100% - 32px); max-width: 420px; pointer-events: none; }
+    .toast {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-left: 4px solid var(--accent-color);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.85rem;
+      color: var(--text-color);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+      cursor: pointer;
+      pointer-events: auto;
+      animation: toast-in 0.2s ease-out;
+    }
+    .toast.toast-hide { animation: toast-out 0.2s ease-in forwards; }
+    @keyframes toast-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes toast-out { from { opacity: 1; } to { opacity: 0; transform: translateY(6px); } }
+
+    /* Модалка showAlert/showConfirm/showPrompt: список кнопок без лишних отступов снизу */
+    #app-modal-buttons button:last-child { margin-bottom: 0; }

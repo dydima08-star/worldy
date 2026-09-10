@@ -274,6 +274,18 @@
     </div>
   </div>
 
+  <!-- ЕДИНАЯ МОДАЛКА (showAlert/showConfirm/showPrompt) -->
+  <div id="app-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <h2 id="app-modal-title"></h2>
+      <div id="app-modal-body" style="margin: 15px 0; color:#ccc; text-align:left;"></div>
+      <div id="app-modal-buttons"></div>
+    </div>
+  </div>
+
+  <!-- ТОСТЫ -->
+  <div id="toast-container"></div>
+
   <!-- Обычные скрипты (не модули): игра должна открываться двойным кликом, по file://.
        Порядок важен только там, где код выполняется сразу, а не в обработчике. -->
   <script src="js/auth.js"></script>        <!-- ПИН-код: строго первым -->
@@ -283,6 +295,7 @@
   <script src="js/config.js"></script>
   <script src="js/state.js"></script>       <!-- myRole: нужен main.js -->
   <script src="js/dom.js"></script>         <!-- getElementById: разметка выше уже загружена -->
+  <script src="js/dialog.js"></script>      <!-- showToast/showAlert/showConfirm/showPrompt: нужны всем остальным -->
   <script src="js/ui.js"></script>
   <script src="js/words.js"></script>
   <script src="js/shop.js"></script>
