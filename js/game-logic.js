@@ -220,6 +220,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         };
         if (shieldUsedToday) updates[`wordle_season_v1/comboShield/${myRole}`] = shieldUsedToday;
         db.ref().update(updates);
+        checkAchievements();
 
         document.getElementById('result-title').innerText = isWin ? '🎉 Победа!' : '❌ Поражение!';
         document.getElementById('result-desc').innerHTML =

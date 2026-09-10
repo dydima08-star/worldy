@@ -224,6 +224,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         [`wordle_season_v1/miner/${myRole}/accumulatedCoins`]: 0,
         [`wordle_season_v1/miner/${myRole}/lastCollectTime`]: cappedNow
       });
+      checkAchievements();
 
       showToast(`✅ Собрано ${accumulated} 🪙 с майнера!`, 'ok');
     }
@@ -284,6 +285,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         [`wordle_season_v1/miner/${myRole}/accumulatedCoins`]: 0,
         [`wordle_season_v1/miner/${myRole}/lastCollectTime`]: now
       });
+      checkAchievements();
 
       showToast(`✅ Батарея улучшена! Теперь ${upgrade.workHours}ч работы / ${upgrade.restHours}ч отдыха.`, 'ok');
     }

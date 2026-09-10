@@ -41,6 +41,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
           [`wordle_season_v1/coins/${targetPlayer}`]: targetCoins + amount,
           [`wordle_season_v1/gifts/${targetPlayer}/${giftRef.key}`]: { from: myRole, amount: amount, ts: getNow() }
         });
+        checkAchievements();
 
         showToast(`✅ Вы подарили ${amount} 🪙 ${playerName(targetPlayer)}!`, 'ok');
         closeGiftModal();

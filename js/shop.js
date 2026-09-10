@@ -162,6 +162,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         db.ref(invRef).set({ count: curCount + qty });
       }
       db.ref(`wordle_season_v1/coins/${myRole}`).set(myCoins - item.price);
+      checkAchievements();
     }
 
     // ОБМЕННИК
@@ -185,6 +186,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         [`wordle_season_v1/score/${myRole}`]: myScore - pointsCost,
         [`wordle_season_v1/coins/${myRole}`]: myCoins + finalGain
       });
+      checkAchievements();
 
       showToast(`Успешный обмен! Получено +${finalGain} 🪙` + (bonus > 0 ? ` (в т.ч. +${bonus} бонус)` : ''), 'ok');
       renderShop();
