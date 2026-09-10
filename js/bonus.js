@@ -36,7 +36,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         const el = document.createElement('div');
         el.className = 'wheel-label';
         // подпись по центру сектора, «от центра наружу»
-        el.style.transform = `rotate(${i * SECTOR_DEG}deg) translateY(-38%)`;
+        el.style.transform = `rotate(${i * SECTOR_DEG}deg)`;
         el.innerHTML = `<span>${SHORT_LABEL[DAILY_REWARDS[ri].val] || DAILY_REWARDS[ri].label}</span>`;
         labels.appendChild(el);
       });

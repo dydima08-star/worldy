@@ -226,14 +226,14 @@
 
     /* Колесо фортуны ежедневного бонуса */
     .wheel-wrap { position: relative; width: 100%; max-width: 320px; margin: 16px auto; aspect-ratio: 1; }
-    .wheel-rotor { position: absolute; inset: 0; border-radius: 50%; border: 6px solid #2a2a2c; box-shadow: 0 0 0 3px #6AAA64 inset, 0 10px 30px rgba(0,0,0,0.6); will-change: transform; transition: transform 4.2s cubic-bezier(0.12, 0.75, 0.2, 1); }
+    .wheel-rotor { position: absolute; inset: 0; overflow: hidden; pointer-events: none; border-radius: 50%; border: 6px solid #2a2a2c; box-shadow: 0 0 0 3px #6AAA64 inset, 0 10px 30px rgba(0,0,0,0.6); will-change: transform; transition: transform 4.2s cubic-bezier(0.12, 0.75, 0.2, 1); }
     .wheel-wrap.spent .wheel-rotor { filter: grayscale(0.7) brightness(0.55); transition: none; }
     .wheel { position: absolute; inset: 0; border-radius: 50%; }
-    .wheel-labels { position: absolute; inset: 0; border-radius: 50%; }
-    .wheel-label { position: absolute; inset: 0; display: flex; justify-content: center; transform-origin: 50% 50%; }
-    .wheel-label span { font-size: 0.72rem; font-weight: bold; padding-top: 10%; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
-    .wheel-pointer { position: absolute; top: -6px; left: 50%; transform: translateX(-50%); z-index: 3; width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 18px solid var(--rp-color); filter: drop-shadow(0 0 6px var(--rp-color)); }
-    .wheel-hub { position: absolute; top: 50%; left: 50%; width: 26%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; background: #1a1a1b; border: 3px solid #6AAA64; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; z-index: 2; }
+    .wheel-labels { position: absolute; inset: 0; border-radius: 50%; pointer-events: none; }
+    .wheel-label { position: absolute; inset: 0; display: flex; justify-content: center; transform-origin: 50% 50%; pointer-events: none; }
+    .wheel-label span { font-size: 0.72rem; font-weight: bold; padding-top: 12%; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
+    .wheel-pointer { pointer-events: none; position: absolute; top: -6px; left: 50%; transform: translateX(-50%); z-index: 3; width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 18px solid var(--rp-color); filter: drop-shadow(0 0 6px var(--rp-color)); }
+    .wheel-hub { pointer-events: none; position: absolute; top: 50%; left: 50%; width: 26%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; background: #1a1a1b; border: 3px solid #6AAA64; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; z-index: 2; }
     #confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 5; }
     #confetti i { position: absolute; top: -10px; width: 7px; height: 11px; border-radius: 2px; animation: conf-fall 1.4s ease-in forwards; }
     @keyframes conf-fall { to { transform: translate(var(--dx), 320px) rotate(540deg); opacity: 0; } }
