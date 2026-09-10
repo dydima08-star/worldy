@@ -8,10 +8,61 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
     function selectRole(role) {
       myRole = role;
       localStorage.setItem('wordle_role', role);
+      showProfileModal();
+    }
+
+    // ================= ПРОФИЛЬ ИГРОКА (имя + аватар) =================
+
+    const PROFILE_AVATARS = ['🦊', '🐻', '🐼', '🐸', '🐙', '🦉', '🐺', '🦁', '🐧', '🐬', '🦄', '🐲'];
+    let __profileSelectedAvatar = '';
+
+    function playerName(role) { return globalState?.players?.[role]?.name || ('Игрок ' + role); }
+    function playerAvatar(role) { return globalState?.players?.[role]?.avatar || (role === 1 ? '🔵' : '🟣'); }
+
+    // Открывает шаг 2 модалки выбора роли (имя + аватар). Используется и при первом входе, и из «👤 Профиль».
+    function showProfileModal() {
+      document.getElementById('role-modal').classList.remove('hidden');
+      document.getElementById('role-modal-step1').classList.add('hidden');
+      document.getElementById('role-modal-step2').classList.remove('hidden');
+
+      const existing = globalState?.players?.[myRole] || {};
+      document.getElementById('profile-name-input').value = existing.name || '';
+      __profileSelectedAvatar = existing.avatar || '';
+
+      const grid = document.getElementById('profile-avatar-grid');
+      grid.innerHTML = '';
+      PROFILE_AVATARS.forEach(a => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.innerText = a;
+        btn.className = 'avatar-btn' + (a === __profileSelectedAvatar ? ' selected' : '');
+        btn.onclick = () => {
+          __profileSelectedAvatar = a;
+          grid.querySelectorAll('.avatar-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+        };
+        grid.appendChild(btn);
+      });
+    }
+
+    function closeProfileModal() {
       document.getElementById('role-modal').classList.add('hidden');
-      if (globalState) {
-        renderUI(globalState);
-      }
+      document.getElementById('role-modal-step1').classList.remove('hidden');
+      document.getElementById('role-modal-step2').classList.add('hidden');
+      if (globalState) renderUI(globalState);
+    }
+
+    function saveProfile() {
+      const name = document.getElementById('profile-name-input').value.trim().slice(0, 16);
+      const updates = {};
+      if (name) updates[`wordle_season_v1/players/${myRole}/name`] = name;
+      if (__profileSelectedAvatar) updates[`wordle_season_v1/players/${myRole}/avatar`] = __profileSelectedAvatar;
+      if (Object.keys(updates).length) db.ref().update(updates);
+      closeProfileModal();
+    }
+
+    function skipProfile() {
+      closeProfileModal();
     }
 
     function renderUI(data) {
@@ -33,6 +84,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         const rp = data.rp?.[p] || 0;
         const rank = getRankByRP(rp);
 
+        document.getElementById(`p${p}-name`).innerText = `${playerAvatar(p)} ${playerName(p)}`;
         document.getElementById(`p${p}-rp`).innerHTML = `<span style="color: ${rank.color};">${rank.icon} ${rp} RP</span>`;
         document.getElementById(`p${p}-score`).innerText = data.score?.[p] || 0;
         document.getElementById(`p${p}-coins`).innerText = `${data.coins?.[p] || 0} 🪙`;

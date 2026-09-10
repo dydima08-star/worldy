@@ -34,7 +34,7 @@
     <div class="scoreboard">
       <div id="p1-card" class="player-card">
         <div id="p1-crown" class="crown">👑</div>
-        <div class="player-name">Игрок 1</div>
+        <div id="p1-name" class="player-name">Игрок 1</div>
         <div id="p1-rp" class="player-rp">0 RP</div>
         <div style="font-size: 0.9rem; color: #4ab8e2; margin: 2px 0;">Очки: <span id="p1-score">0</span> 🎯</div>
         <div id="p1-coins" class="player-coins">0 M</div>
@@ -42,7 +42,7 @@
       </div>
       <div id="p2-card" class="player-card">
         <div id="p2-crown" class="crown">👑</div>
-        <div class="player-name">Игрок 2</div>
+        <div id="p2-name" class="player-name">Игрок 2</div>
         <div id="p2-rp" class="player-rp">0 RP</div>
         <div style="font-size: 0.9rem; color: #4ab8e2; margin: 2px 0;">Очки: <span id="p2-score">0</span> 🎯</div>
         <div id="p2-coins" class="player-coins">0 M</div>
@@ -67,6 +67,7 @@
       ⛏️ Майнер монет
     </button>
     <button id="btn-go-create" onclick="showScreen(screenCreate)">✏️ Загадать слова (для соперника)</button>
+    <button id="btn-go-profile" onclick="showProfileModal()" class="secondary">👤 Профиль</button>
 
     <div class="menu-box">
       <h3>🎯 Доступные слова</h3>
@@ -216,9 +217,19 @@
   <!-- Модалки -->
   <div id="role-modal" class="modal-overlay hidden">
     <div class="modal">
-      <h2>Кто играет?</h2>
-      <button onclick="selectRole(1)">Я — Игрок 1</button>
-      <button onclick="selectRole(2)">Я — Игрок 2</button>
+      <div id="role-modal-step1">
+        <h2>Кто играет?</h2>
+        <button onclick="selectRole(1)">Я — Игрок 1</button>
+        <button onclick="selectRole(2)">Я — Игрок 2</button>
+      </div>
+      <div id="role-modal-step2" class="hidden">
+        <h2>Как вас называть?</h2>
+        <input type="text" id="profile-name-input" maxlength="16" placeholder="Имя (необязательно)"
+          style="width:100%; padding:10px; margin-bottom:12px; background:#272729; color:white; border:1px solid var(--border-color); border-radius:8px; text-align:center; box-sizing:border-box;">
+        <div id="profile-avatar-grid" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:15px;"></div>
+        <button id="profile-save-btn" onclick="saveProfile()">Готово</button>
+        <button onclick="skipProfile()" class="secondary">Позже</button>
+      </div>
     </div>
   </div>
 

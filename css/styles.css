@@ -280,3 +280,7 @@
 
     /* Модалка showAlert/showConfirm/showPrompt: список кнопок без лишних отступов снизу */
     #app-modal-buttons button:last-child { margin-bottom: 0; }
+
+    /* Выбор аватара в профиле */
+    .avatar-btn { width: auto; margin: 0; padding: 8px; font-size: 1.4rem; background: #272729; border: 2px solid var(--border-color); border-radius: 8px; cursor: pointer; }
+    .avatar-btn.selected { border-color: var(--accent-color); background: #1c2733; box-shadow: 0 0 8px rgba(74,144,226,0.5); }
