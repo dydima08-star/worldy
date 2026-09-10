@@ -153,6 +153,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       if (isWin || isLose) {
         let rpChange = 0, coinsEarned = 0, pointsEarned = 0;
         let newCombo = globalState.combos?.[myRole] || 0;
+        let shieldUsedToday = false;
 
         if (isWin) {
           const baseRP = wordObj.len * 60;
@@ -179,9 +180,8 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
           rpChange = -penalty; pointsEarned = 0; coinsEarned = 0;
 
           const today = new Date().toISOString().slice(0, 10);
-          const shieldKey = `combo_shield_${myRole}`;
-          const shielded = (isActiveById('perm_combo_shield') || isActiveById('week_immunity')) && localStorage.getItem(shieldKey) !== today;
-          if (shielded) { localStorage.setItem(shieldKey, today); }
+          const shielded = (isActiveById('perm_combo_shield') || isActiveById('week_immunity')) && globalState?.comboShield?.[myRole] !== today;
+          if (shielded) { shieldUsedToday = today; }
           else if (isActiveById('week_combo_freeze')) { newCombo = Math.max(2, newCombo); } // комбо не падает ниже 2/5
           else { newCombo = 0; }
         }
@@ -192,7 +192,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         const newScore = Math.max(0, oldScore + pointsEarned);
         const newCoins = (globalState.coins?.[myRole] || 0) + coinsEarned;
 
-        db.ref().update({
+        const updates = {
           [`wordle_season_v1/rp/${myRole}`]: newRP,
           [`wordle_season_v1/score/${myRole}`]: newScore,
           [`wordle_season_v1/coins/${myRole}`]: newCoins,
@@ -206,7 +206,9 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
             date: wordObj.date || new Date().toISOString().slice(0, 10),
             author: wordObj.author
           }
-        });
+        };
+        if (shieldUsedToday) updates[`wordle_season_v1/comboShield/${myRole}`] = shieldUsedToday;
+        db.ref().update(updates);
 
         document.getElementById('result-title').innerText = isWin ? '🎉 Победа!' : '❌ Поражение!';
         document.getElementById('result-desc').innerHTML =

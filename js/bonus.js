@@ -8,7 +8,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
     // ЕЖЕДНЕВНЫЙ БОНУС (РУЛЕТКА)
     function openDailyBonus() {
       document.getElementById('bonus-modal').classList.remove('hidden');
-      const lastSpinDate = localStorage.getItem(`last_spin_date_${myRole}`);
+      const lastSpinDate = globalState?.lastSpin?.[myRole];
       const todayDate = new Date().toISOString().slice(0, 10); // Формат: YYYY-MM-DD
 
       resetRoulette();
@@ -72,6 +72,11 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
 
     function spinDailyBonus() {
       if (isSpinning) return;
+      // Дублируем проверку даты здесь: иначе прямой вызов spinDailyBonus() из консоли
+      // (в обход кнопки/openDailyBonus) начислял бы награду без суточного ограничения.
+      const todayDate = new Date().toISOString().slice(0, 10); // Формат: YYYY-MM-DD
+      if (globalState?.lastSpin?.[myRole] === todayDate) return;
+
       const statusEl = document.getElementById('bonus-status');
       const btnSpin = document.getElementById('btn-spin');
       const track = document.getElementById('roulette-track');
@@ -100,16 +105,16 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
 
       // 4) По завершении — начисляем награду
       setTimeout(() => {
-        const todayDate = new Date().toISOString().slice(0, 10); // Формат: YYYY-MM-DD
-        localStorage.setItem(`last_spin_date_${myRole}`, todayDate);
+        const updates = { [`wordle_season_v1/lastSpin/${myRole}`]: todayDate };
 
         if (win.type === 'score') {
           const currentScore = globalState?.score?.[myRole] || 0;
-          db.ref(`wordle_season_v1/score/${myRole}`).set(currentScore + win.val);
+          updates[`wordle_season_v1/score/${myRole}`] = currentScore + win.val;
         } else if (win.type === 'boost') {
           const boostUntil = Date.now() + (24 * 60 * 60 * 1000);
-          db.ref(`wordle_season_v1/boosts/${myRole}`).set({ mult: win.val, until: boostUntil });
+          updates[`wordle_season_v1/boosts/${myRole}`] = { mult: win.val, until: boostUntil };
         }
+        db.ref().update(updates);
 
         statusEl.innerHTML = `<span style="color:#2ecc71;">🎉 Поздравляем!</span><br>${win.label}`;
         isSpinning = false;
