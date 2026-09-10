@@ -15,6 +15,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
     let sessionPresent = [];    // буквы-подсказки (оранжевые)
     let sessionRemoved = [];    // серые буквы, убранные с клавиатуры
     let sessionExtraAttempts = 0;
+    let sessionStartTs = 0;    // getNow() на момент startWord() — для history.ms и day_blitz_hunt
 
     let currentShopFilter = 'all';
 

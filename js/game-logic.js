@@ -93,6 +93,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       activeWordId = id;
       const wObj = globalState.words[id];
       sessionGreens = {}; sessionPresent = []; sessionRemoved = []; sessionExtraAttempts = 0;
+      sessionStartTs = getNow();   // для длительности партии (history.ms) и товара day_blitz_hunt
       selectedIndex = 0;
       applyStartEffects(wObj);
       currentGuess = buildGuessTemplate(wObj.len);   // открытые буквы подставлены, но их можно стереть/заменить
@@ -192,6 +193,22 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         const newScore = Math.max(0, oldScore + pointsEarned);
         const newCoins = (globalState.coins?.[myRole] || 0) + coinsEarned;
 
+        // Длительность партии — только если известно время старта (sessionStartTs сбрасывается
+        // при перезагрузке страницы, тогда ms не пишем, а не врём приблизительным значением)
+        const nowTs = getNow();
+        const ms = sessionStartTs ? (nowTs - sessionStartTs) : null;
+
+        const historyEntry = {
+          len: wordObj.len,
+          attempts: attempts.length,
+          win: isWin,
+          date: wordObj.date || new Date().toISOString().slice(0, 10),
+          author: wordObj.author,
+          word: wordObj.secret,
+          ts: nowTs
+        };
+        if (ms !== null) historyEntry.ms = ms;
+
         const updates = {
           [`wordle_season_v1/rp/${myRole}`]: newRP,
           [`wordle_season_v1/score/${myRole}`]: newScore,
@@ -199,13 +216,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
           [`wordle_season_v1/combos/${myRole}`]: newCombo,
           [`wordle_season_v1/words/${activeWordId}/status`]: 'completed',
           [`wordle_season_v1/words/${activeWordId}/attempts`]: attempts,
-          [`wordle_season_v1/history/${wordObj.target}/${activeWordId}`]: {
-            len: wordObj.len,
-            attempts: attempts.length,
-            win: isWin,
-            date: wordObj.date || new Date().toISOString().slice(0, 10),
-            author: wordObj.author
-          }
+          [`wordle_season_v1/history/${wordObj.target}/${activeWordId}`]: historyEntry
         };
         if (shieldUsedToday) updates[`wordle_season_v1/comboShield/${myRole}`] = shieldUsedToday;
         db.ref().update(updates);
@@ -216,6 +227,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
           `Рейтинг: <b>${rpChange > 0 ? '+' + rpChange : rpChange} RP</b><br>` +
           `Очки: <b>+${pointsEarned} 🎯</b><br>` +
           `🔥 Комбо: <b>${newCombo}/5</b><br>` +
+          (ms !== null ? `⏱ Время: <b>${formatDuration(ms)}</b><br>` : '') +
           `<span style="font-size:0.8rem;color:#888;">Монеты добываются обменом очков в магазине 💱</span>`;
         document.getElementById('result-modal').classList.remove('hidden');
         renderBoard();
@@ -228,4 +240,12 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       document.getElementById('result-modal').classList.add('hidden');
       activeWordId = null;
       showScreen(screenMenu);
+    }
+
+    // Форматирует длительность партии (ms) для модалки результата и истории матчей
+    function formatDuration(ms) {
+      const totalSec = Math.round(ms / 1000);
+      const m = Math.floor(totalSec / 60);
+      const s = totalSec % 60;
+      return m > 0 ? `${m}м ${s}с` : `${s}с`;
     }
