@@ -224,15 +224,29 @@
     /* Пустая клетка с известной зелёной буквой: только подсветка позиции, буква НЕ подставляется */
     .tile.green-hint { border-color: var(--correct-color); background-color: rgba(83,141,78,0.18); box-shadow: inset 0 0 0 2px rgba(83,141,78,0.45); }
 
-    /* Анимированная рулетка ежедневного бонуса */
-    .roulette-window { position: relative; width: 100%; height: 72px; overflow: hidden; border: 2px solid var(--gold-color); border-radius: 10px; background: #0e0e0f; margin: 16px 0; box-shadow: inset 0 0 20px rgba(0,0,0,0.7); }
-    .roulette-window::before, .roulette-window::after { content: ''; position: absolute; top: 0; bottom: 0; width: 40px; z-index: 2; pointer-events: none; }
-    .roulette-window::before { left: 0; background: linear-gradient(to right, #0e0e0f, transparent); }
-    .roulette-window::after { right: 0; background: linear-gradient(to left, #0e0e0f, transparent); }
-    .roulette-pointer { position: absolute; top: -2px; bottom: -2px; left: 50%; width: 3px; background: var(--rp-color); transform: translateX(-50%); z-index: 3; box-shadow: 0 0 10px var(--rp-color); }
-    .roulette-pointer::before { content: '\25BC'; position: absolute; top: -4px; left: 50%; transform: translateX(-50%); color: var(--rp-color); font-size: 0.8rem; }
-    .roulette-track { display: flex; height: 100%; will-change: transform; }
-    .roulette-item { flex: 0 0 140px; width: 140px; height: 100%; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 0.78rem; font-weight: bold; padding: 4px; border-right: 1px solid #2a2a2c; line-height: 1.2; }
+    /* Колесо фортуны ежедневного бонуса */
+    .wheel-wrap { position: relative; width: 100%; max-width: 320px; margin: 16px auto; aspect-ratio: 1; }
+    .wheel-rotor { position: absolute; inset: 0; border-radius: 50%; border: 6px solid #2a2a2c; box-shadow: 0 0 0 3px #6AAA64 inset, 0 10px 30px rgba(0,0,0,0.6); will-change: transform; transition: transform 4.2s cubic-bezier(0.12, 0.75, 0.2, 1); }
+    .wheel-wrap.spent .wheel-rotor { filter: grayscale(0.7) brightness(0.55); transition: none; }
+    .wheel { position: absolute; inset: 0; border-radius: 50%; }
+    .wheel-labels { position: absolute; inset: 0; border-radius: 50%; }
+    .wheel-label { position: absolute; inset: 0; display: flex; justify-content: center; transform-origin: 50% 50%; }
+    .wheel-label span { font-size: 0.72rem; font-weight: bold; padding-top: 10%; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
+    .wheel-pointer { position: absolute; top: -6px; left: 50%; transform: translateX(-50%); z-index: 3; width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 18px solid var(--rp-color); filter: drop-shadow(0 0 6px var(--rp-color)); }
+    .wheel-hub { position: absolute; top: 50%; left: 50%; width: 26%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; background: #1a1a1b; border: 3px solid #6AAA64; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; z-index: 2; }
+    #confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 5; }
+    #confetti i { position: absolute; top: -10px; width: 7px; height: 11px; border-radius: 2px; animation: conf-fall 1.4s ease-in forwards; }
+    @keyframes conf-fall { to { transform: translate(var(--dx), 320px) rotate(540deg); opacity: 0; } }
+    .bonus-timer-value { color: var(--gold-color); font-weight: bold; font-family: monospace; font-size: 1.3rem; }
+    #btn-spin { background: linear-gradient(45deg, #4d8a48, #6AAA64); color: #fff; box-shadow: 0 4px 0 #35632f, 0 6px 18px rgba(106,170,100,0.35); transition: transform 0.12s; }
+    #btn-spin:active { transform: translateY(3px); box-shadow: 0 1px 0 #35632f; }
+    #btn-spin:disabled { filter: grayscale(0.6); opacity: 0.6; box-shadow: none; }
+    #bonus-prize { border: 1px solid #6AAA64; border-radius: 12px; background: #162015; padding: 14px; margin: 12px 0; animation: prize-in 0.35s ease-out; }
+    @keyframes prize-in { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: none; } }
+    @media (max-width: 400px) {
+      .wheel-wrap { max-width: 260px; }
+      .wheel-label span { font-size: 0.62rem; }
+    }
 
     /* Убранные (серые) клавиши */
     .key.disabled { background-color: var(--absent-color) !important; color:#666 !important; cursor: not-allowed; opacity: 0.55; }

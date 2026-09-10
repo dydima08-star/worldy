@@ -314,12 +314,26 @@
   <div id="bonus-modal" class="modal-overlay hidden">
     <div class="modal">
       <h2>🎁 Ежедневный бонус</h2>
-      <div class="roulette-window" id="roulette-window">
-        <div class="roulette-pointer"></div>
-        <div class="roulette-track" id="roulette-track"></div>
+      <div class="wheel-wrap" id="wheel-wrap">
+        <div class="wheel-pointer"></div>
+        <div class="wheel-rotor" id="wheel-rotor">
+          <div class="wheel" id="wheel"></div>
+          <div class="wheel-labels" id="wheel-labels"></div>
+        </div>
+        <div class="wheel-hub">🎁</div>
+        <div id="confetti"></div>
+      </div>
+      <div id="bonus-timer-box" class="hidden">
+        <p style="color:#aaa; margin-bottom:4px;">⏳ Следующий бонус через:</p>
+        <p id="bonus-timer" class="bonus-timer-value">00:00:00</p>
       </div>
       <p id="bonus-status" style="margin: 15px 0; font-weight: bold; color: #aaa;">🎁 Испытайте удачу!</p>
-      <button id="btn-spin" onclick="spinDailyBonus()" class="gold">Крутить рулетку</button>
+      <div id="bonus-prize" class="hidden">
+        <p style="color:#6AAA64; font-weight:bold; margin-bottom:6px;">🎉 Ты выиграл:</p>
+        <p id="bonus-prize-label" style="font-weight:bold; font-size:1.1rem;"></p>
+        <button onclick="closeDailyBonus()" class="gold">Забрать</button>
+      </div>
+      <button id="btn-spin" onclick="spinDailyBonus()" class="gold">Крутить колесо</button>
       <button onclick="closeDailyBonus()" class="secondary">Закрыть</button>
     </div>
   </div>
