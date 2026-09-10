@@ -54,7 +54,10 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         // Фаза работы
         isWorking = true;
         timeLeft = workMs - elapsed;
-        const workElapsed = elapsed;
+        // База начисления — момент последнего сбора, а не начало цикла, иначе «Накоплено»
+        // показывает то, что уже выплачено.
+        const base = Math.max(startTime, lastCollect);
+        const workElapsed = Math.max(0, now - base);
         const newAccumulated = Math.floor((workElapsed / (60 * 60 * 1000)) * coinsPerHour);
 
         document.getElementById('miner-status-text').innerText = '⚡ Майнер работает';
@@ -72,6 +75,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         // Цикл завершён, начинаем новый
         db.ref(`wordle_season_v1/miner/${myRole}/cycleStartTime`).set(now);
         db.ref(`wordle_season_v1/miner/${myRole}/accumulatedCoins`).set(0);
+        db.ref(`wordle_season_v1/miner/${myRole}/lastCollectTime`).set(now);
         renderMiner();
         return;
       }
@@ -194,6 +198,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
 
       const now = Date.now();
       const startTime = minerData.cycleStartTime || now;
+      const lastCollectTime = minerData.lastCollectTime || 0;
       const elapsed = now - startTime;
 
       if (elapsed >= workMs) {
@@ -201,7 +206,11 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         return;
       }
 
-      const workElapsed = elapsed;
+      // Начисляем только за период с последнего сбора (не с начала цикла) и не дальше конца
+      // рабочей фазы — иначе повторные нажатия «Забрать» выплачивали бы один период заново.
+      const base = Math.max(startTime, lastCollectTime);
+      const cappedNow = Math.min(now, startTime + workMs);
+      const workElapsed = Math.max(0, cappedNow - base);
       const accumulated = Math.floor((workElapsed / (60 * 60 * 1000)) * coinsPerHour);
 
       if (accumulated === 0) {
@@ -213,7 +222,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       db.ref().update({
         [`wordle_season_v1/coins/${myRole}`]: myCoins + accumulated,
         [`wordle_season_v1/miner/${myRole}/accumulatedCoins`]: 0,
-        [`wordle_season_v1/miner/${myRole}/lastCollectTime`]: now
+        [`wordle_season_v1/miner/${myRole}/lastCollectTime`]: cappedNow
       });
 
       alert(`✅ Собрано ${accumulated} 🪙 с майнера!`);
@@ -272,7 +281,8 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         [`wordle_season_v1/coins/${myRole}`]: myCoins - upgrade.price,
         [`wordle_season_v1/miner/${myRole}/batteryLevel`]: targetLevel,
         [`wordle_season_v1/miner/${myRole}/cycleStartTime`]: now,
-        [`wordle_season_v1/miner/${myRole}/accumulatedCoins`]: 0
+        [`wordle_season_v1/miner/${myRole}/accumulatedCoins`]: 0,
+        [`wordle_season_v1/miner/${myRole}/lastCollectTime`]: now
       });
 
       alert(`✅ Батарея улучшена! Теперь ${upgrade.workHours}ч работы / ${upgrade.restHours}ч отдыха.`);
