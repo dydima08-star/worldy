@@ -170,7 +170,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
 
           let boostMult = 1.0;
           const activeBoost = globalState?.boosts?.[myRole];
-          if (activeBoost && activeBoost.until > Date.now()) boostMult = activeBoost.mult;
+          if (activeBoost && activeBoost.until > getNow()) boostMult = activeBoost.mult;
           pointsEarned = Math.round(rpChange * boostMult * rew.pointMult);
           if (isActiveById('week_giant_hunter') && wordObj.len >= 7) pointsEarned *= 2;
         } else {
@@ -179,7 +179,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
           if (isActiveById('day_zero_risk') || isActiveById('week_credit')) penalty = 0;
           rpChange = -penalty; pointsEarned = 0; coinsEarned = 0;
 
-          const today = new Date().toISOString().slice(0, 10);
+          const today = getToday();
           const shielded = (isActiveById('perm_combo_shield') || isActiveById('week_immunity')) && globalState?.comboShield?.[myRole] !== today;
           if (shielded) { shieldUsedToday = today; }
           else if (isActiveById('week_combo_freeze')) { newCombo = Math.max(2, newCombo); } // комбо не падает ниже 2/5

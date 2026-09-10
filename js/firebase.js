@@ -20,3 +20,14 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const gameRef = db.ref('wordle_season_v1');
+
+    // Серверное время Firebase: защищает суточные лимиты и майнер от перевода часов.
+    // Если БД недоступна (офлайн, первый запуск) — offset остаётся 0, т.е. работаем
+    // по локальному времени и ничего не ломаем.
+    let __serverOffset = 0;
+    db.ref('.info/serverTimeOffset').on('value', s => {
+      const v = s.val();
+      if (typeof v === 'number' && isFinite(v)) __serverOffset = v;
+    });
+    function getNow() { return Date.now() + __serverOffset; }
+    function getToday() { return new Date(getNow()).toISOString().slice(0, 10); }

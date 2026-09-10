@@ -9,7 +9,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
     function openDailyBonus() {
       document.getElementById('bonus-modal').classList.remove('hidden');
       const lastSpinDate = globalState?.lastSpin?.[myRole];
-      const todayDate = new Date().toISOString().slice(0, 10); // Формат: YYYY-MM-DD
+      const todayDate = getToday(); // Формат: YYYY-MM-DD
 
       resetRoulette();
       if (lastSpinDate && lastSpinDate === todayDate) {
@@ -74,7 +74,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       if (isSpinning) return;
       // Дублируем проверку даты здесь: иначе прямой вызов spinDailyBonus() из консоли
       // (в обход кнопки/openDailyBonus) начислял бы награду без суточного ограничения.
-      const todayDate = new Date().toISOString().slice(0, 10); // Формат: YYYY-MM-DD
+      const todayDate = getToday(); // Формат: YYYY-MM-DD
       if (globalState?.lastSpin?.[myRole] === todayDate) return;
 
       const statusEl = document.getElementById('bonus-status');
@@ -111,7 +111,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
           const currentScore = globalState?.score?.[myRole] || 0;
           updates[`wordle_season_v1/score/${myRole}`] = currentScore + win.val;
         } else if (win.type === 'boost') {
-          const boostUntil = Date.now() + (24 * 60 * 60 * 1000);
+          const boostUntil = getNow() + (24 * 60 * 60 * 1000);
           updates[`wordle_season_v1/boosts/${myRole}`] = { mult: win.val, until: boostUntil };
         }
         db.ref().update(updates);

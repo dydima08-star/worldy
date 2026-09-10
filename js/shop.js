@@ -96,7 +96,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
     }
 
     function fmtRemaining(until) {
-      let ms = until - Date.now(); if (ms < 0) ms = 0;
+      let ms = until - getNow(); if (ms < 0) ms = 0;
       const d = Math.floor(ms / 86400000);
       const h = Math.floor(ms / 3600000) % 24;
       const m = Math.floor(ms / 60000) % 60;
@@ -107,7 +107,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
     function isActive(item) {
       const e = invEntry(item.id); if (!e) return false;
       if (item.type === 'permanent') return e === true;
-      if (item.type === 'daily' || item.type === 'weekly') return typeof e === 'object' && e.until > Date.now();
+      if (item.type === 'daily' || item.type === 'weekly') return typeof e === 'object' && e.until > getNow();
       if (item.type === 'consumable') return typeof e === 'object' && (e.count || 0) > 0;
       return false;
     }
@@ -131,7 +131,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       if (myCoins < item.price) { alert('Недостаточно монет!'); return; }
 
       const invRef = `wordle_season_v1/inventory/${myRole}/${id}`;
-      const now = Date.now();
+      const now = getNow();
 
       if (item.type === 'permanent') {
         if (isActive(item)) return;

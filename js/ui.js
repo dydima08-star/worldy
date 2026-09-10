@@ -49,7 +49,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         const card = document.getElementById('p' + r + '-card');
         const inv = data.inventory?.[r] || {};
         const gold = inv['perm_gold_nick'] === true;
-        const lord = inv['week_lord_title'] && typeof inv['week_lord_title'] === 'object' && inv['week_lord_title'].until > Date.now();
+        const lord = inv['week_lord_title'] && typeof inv['week_lord_title'] === 'object' && inv['week_lord_title'].until > getNow();
         card.style.borderColor = lord ? '#9b59b6' : (gold ? 'var(--gold-color)' : '');
         card.style.boxShadow = lord ? '0 0 12px rgba(155,89,182,0.6)' : (gold ? '0 0 10px rgba(255,215,0,0.45)' : '');
       });

@@ -40,7 +40,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       const workMs = battery.workHours * 60 * 60 * 1000;
       const restMs = battery.restHours * 60 * 60 * 1000;
 
-      const now = Date.now();
+      const now = getNow();
       const startTime = minerData.cycleStartTime || now;
       const accumulated = minerData.accumulatedCoins || 0;
       const lastCollect = minerData.lastCollectTime || now;
@@ -166,7 +166,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         return;
       }
 
-      const now = Date.now();
+      const now = getNow();
       db.ref().update({
         [`wordle_season_v1/coins/${myRole}`]: myCoins - MINER_COST,
         [`wordle_season_v1/miner/${myRole}/purchased`]: true,
@@ -196,7 +196,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       const battery = BATTERY_UPGRADES[Math.min(batteryLevel - 1, BATTERY_UPGRADES.length - 1)];
       const workMs = battery.workHours * 60 * 60 * 1000;
 
-      const now = Date.now();
+      const now = getNow();
       const startTime = minerData.cycleStartTime || now;
       const lastCollectTime = minerData.lastCollectTime || 0;
       const elapsed = now - startTime;
@@ -276,7 +276,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         return;
       }
 
-      const now = Date.now();
+      const now = getNow();
       db.ref().update({
         [`wordle_season_v1/coins/${myRole}`]: myCoins - upgrade.price,
         [`wordle_season_v1/miner/${myRole}/batteryLevel`]: targetLevel,
