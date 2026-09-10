@@ -24,3 +24,6 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
     let currentStatsPlayer = 1;
 
     let prevSnap = null;   // предыдущий слепок состояния для diffAndNotify() — см. notify.js
+
+    let historyFilter = 'all';   // фильтр экрана истории: all | season | week
+    let statsFilter = 'all';     // фильтр экрана статистики: all | season

@@ -160,6 +160,11 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       showPlayerStats(currentStatsPlayer); // Показываем статистику выбранного игрока
     });
 
+    document.getElementById('btn-go-history').addEventListener('click', () => {
+      showScreen(document.getElementById('screen-history'));
+      showHistoryFor(currentHistoryPlayer);
+    });
+
     // ---- Клавиатура и ввод (буквы можно ставить в любую позицию) ----
     document.addEventListener('keydown', (e) => {
       if (screenGame.classList.contains('hidden') || !activeWordId) return;

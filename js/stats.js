@@ -7,6 +7,14 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
 
     // ================= СТАТИСТИКА ИГРОКА =================
 
+    // Фильтр «Всё время / Этот сезон» — сезон совпадает с календарным месяцем сброса сезона (main.js)
+    function setStatsFilter(filterType, btnEl) {
+      statsFilter = filterType;
+      document.querySelectorAll('#screen-stats .shop-tab-btn').forEach(b => b.classList.remove('active'));
+      if (btnEl) btnEl.classList.add('active');
+      showPlayerStats(currentStatsPlayer);
+    }
+
     function showPlayerStats(playerNum) {
       currentStatsPlayer = playerNum;
 
@@ -37,7 +45,13 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
           mergedWords[id] = { len: w.len, attempts: (w.attempts || []).length, win: isSolved(w), date: w.date, author: w.author };
         }
       });
-      const playerWords = Object.values(mergedWords);
+      const playerWords = Object.values(mergedWords).filter(w => {
+        if (statsFilter !== 'season') return true;
+        if (!w.date) return false;
+        const now = new Date();
+        const curMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        return w.date.slice(0, 7) === curMonth;
+      });
 
       const wins = playerWords.filter(w => w.win).length;
 

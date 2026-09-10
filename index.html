@@ -66,6 +66,9 @@
     <button id="btn-go-miner" onclick="showScreen(screenMiner)" class="gold" style="background: linear-gradient(45deg, #f39c12, #e67e22); color: white;">
       ⛏️ Майнер монет
     </button>
+    <button id="btn-go-history" class="gold" style="background: linear-gradient(45deg, #6c5ce7, #a29bfe); color: white;">
+      📜 История матчей
+    </button>
     <button id="btn-go-create" onclick="showScreen(screenCreate)">✏️ Загадать слова (для соперника)</button>
     <button id="btn-go-profile" onclick="showProfileModal()" class="secondary">👤 Профиль</button>
 
@@ -171,6 +174,11 @@
         </button>
       </div>
 
+      <div class="shop-tabs">
+        <button class="shop-tab-btn active" onclick="setStatsFilter('all', this)">Всё время</button>
+        <button class="shop-tab-btn" onclick="setStatsFilter('season', this)">Этот сезон</button>
+      </div>
+
       <!-- Контейнер статистики -->
       <div id="stats-container" style="background: #1f1f22; border-radius: 8px; padding: 15px;">
         <!-- Здесь будет статистика -->
@@ -182,6 +190,33 @@
       </button>
 
       <button onclick="showScreen(screenMenu)" class="secondary" style="margin-top: 10px;">⬅️ Вернуться в меню</button>
+    </div>
+  </div>
+
+  <!-- ИСТОРИЯ МАТЧЕЙ -->
+  <div id="screen-history" class="screen hidden">
+    <div class="menu-box" style="padding: 12px;">
+      <h3 style="text-align: center; margin-bottom: 12px;">📜 История матчей</h3>
+
+      <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+        <button id="history-btn-p1" onclick="showHistoryFor(1)" style="flex: 1; padding: 10px; background: var(--accent-color); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
+          Игрок 1
+        </button>
+        <button id="history-btn-p2" onclick="showHistoryFor(2)" style="flex: 1; padding: 10px; background: #272729; color: #aaa; border: 1px solid var(--border-color); border-radius: 8px; font-weight: bold; cursor: pointer;">
+          Игрок 2
+        </button>
+      </div>
+
+      <div class="shop-tabs">
+        <button class="shop-tab-btn active" onclick="setHistoryFilter('all', this)">Всё время</button>
+        <button class="shop-tab-btn" onclick="setHistoryFilter('season', this)">Этот сезон</button>
+        <button class="shop-tab-btn" onclick="setHistoryFilter('week', this)">7 дней</button>
+      </div>
+
+      <div id="history-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+      <button id="history-load-more" onclick="loadMoreHistory()" class="secondary hidden" style="margin-top:10px;">Показать ещё</button>
+
+      <button onclick="showScreen(screenMenu)" class="secondary" style="margin-top: 15px;">⬅️ Вернуться в меню</button>
     </div>
   </div>
 
@@ -319,6 +354,7 @@
   <script src="js/state.js"></script>       <!-- myRole: нужен main.js -->
   <script src="js/dom.js"></script>         <!-- getElementById: разметка выше уже загружена -->
   <script src="js/dialog.js"></script>      <!-- showToast/showAlert/showConfirm/showPrompt: нужны всем остальным -->
+  <script src="js/history.js"></script>     <!-- экран истории матчей -->
   <script src="js/notify.js"></script>      <!-- дифф снапшотов RTDB: нужен main.js -->
   <script src="js/ui.js"></script>
   <script src="js/words.js"></script>
