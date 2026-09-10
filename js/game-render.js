@@ -24,7 +24,8 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       const len = wordObj.len;
       const maxAtt = getMaxAttempts();
       grid.innerHTML = '';
-      grid.style.gridTemplateColumns = `repeat(${len}, 1fr)`;
+      grid.style.setProperty('--cols', len);
+      grid.style.gridTemplateColumns = '';   // размер и колонки задаются в CSS через --cols
 
       const attempts = wordObj.attempts || [];
       const keyStates = {};
@@ -34,8 +35,6 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       const secret = wordObj.secret.toUpperCase();
       const over = isGameOver(wordObj);
       const curRow = over ? -1 : attempts.length;   // после отгадывания активной строки нет — ввод закрыт
-      const size = len > 7 ? '34px' : (len > 5 ? '42px' : '48px');
-      const fs = len > 7 ? '1.1rem' : '1.4rem';
 
       for (let r = 0; r < maxAtt; r++) {
         let statuses = Array(len).fill('absent');
@@ -49,7 +48,6 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         for (let c = 0; c < len; c++) {
           const tile = document.createElement('div');
           tile.className = 'tile';
-          tile.style.width = size; tile.style.height = size; tile.style.fontSize = fs;
           if (attempts[r]) {
             const l = guessLetters[c]; tile.innerText = l; tile.dataset.state = statuses[c];
             if (statuses[c] === 'correct') keyStates[l] = 'correct';

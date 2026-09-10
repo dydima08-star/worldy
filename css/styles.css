@@ -151,8 +151,17 @@
     .exchange-btn:hover { background: #333338; border-color: var(--gold-color); }
 
     /* Игровое поле */
-    .grid { display: grid; gap: 5px; margin-bottom: 15px; }
-    .tile { border: 2px solid var(--border-color); display: flex; justify-content: center; align-items: center; font-weight: bold; text-transform: uppercase; border-radius: 4px; }
+    .grid {
+      --gap: 5px;
+      --tile-max: 52px;
+      --field: min(100vw - 24px, 500px);          /* 24px = padding body 12+12 */
+      --tile: min(var(--tile-max),
+                   (var(--field) - (var(--cols) - 1) * var(--gap)) / var(--cols));
+      display: grid; gap: var(--gap); justify-content: center;
+      grid-template-columns: repeat(var(--cols), var(--tile));
+      margin-bottom: 15px;
+    }
+    .tile { width: var(--tile); height: var(--tile); font-size: calc(var(--tile) * 0.5); border: 2px solid var(--border-color); display: flex; justify-content: center; align-items: center; font-weight: bold; text-transform: uppercase; border-radius: 4px; }
     .tile[data-state="correct"] { background-color: var(--correct-color); border-color: var(--correct-color); }
     .tile[data-state="present"] { background-color: var(--present-color); border-color: var(--present-color); }
     .tile[data-state="absent"] { background-color: var(--absent-color); border-color: var(--absent-color); }
@@ -179,9 +188,9 @@
       background-color: #ffffff; 
       color: #000000; 
       border: none; 
-      border-radius: 4px; 
-      height: 38px; 
-      flex: 1; 
+      border-radius: 4px;
+      height: clamp(34px, 9.5vw, 42px);
+      flex: 1;
       min-width: 0; 
       padding: 0; 
       font-size: 0.92rem; 
