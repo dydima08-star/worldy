@@ -96,6 +96,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       sessionStartTs = getNow();   // для длительности партии (history.ms) и товара day_blitz_hunt
       selectedIndex = 0;
       applyStartEffects(wObj);
+      applyCaseHints(id, wObj);   // подсказки, открытые кейсом ранее — переживают перезагрузку, в отличие от бустерных
       currentGuess = buildGuessTemplate(wObj.len);   // открытые буквы подставлены, но их можно стереть/заменить
       selectedIndex = firstEmpty(wObj.len);
       const msgEl = document.getElementById('game-status-msg');
@@ -106,6 +107,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         : (wObj.author === 'Система' ? '📅 Слово дня' : `Слово от ${playerName(wObj.author)} (${wObj.len} букв)`);
       showScreen(screenGame);
       renderConsumableBar();
+      renderCaseBar();
       renderBoard();
     }
 
@@ -247,6 +249,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
           `<span style="font-size:0.8rem;color:#888;">Монеты добываются обменом очков в магазине 💱</span>`;
         document.getElementById('result-modal').classList.remove('hidden');
         renderBoard();
+        renderCaseBar();
       } else {
         db.ref(`wordle_season_v1/words/${activeWordId}/attempts`).set(attempts);
         renderBoard();

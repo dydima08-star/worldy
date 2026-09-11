@@ -140,6 +140,9 @@
   <div id="screen-game" class="screen hidden">
     <div id="game-status-msg" style="margin-bottom: 10px; font-weight: bold; color: var(--accent-color);"></div>
     <div id="game-hint-bar" class="hint-bar hidden"></div>
+    <div id="case-bar" class="case-bar hidden">
+      <button id="btn-open-case" onclick="openCaseModal()">🎁 Кейс (2)</button>
+    </div>
     <div id="game-consumables" class="consumable-bar" style="display:none;"></div>
     <div class="grid" id="grid"></div>
     
@@ -338,6 +341,22 @@
     </div>
   </div>
 
+  <!-- МОДАЛКА КЕЙСА С БУКВАМИ -->
+  <div id="case-modal" class="modal-overlay hidden">
+    <div class="modal" style="position:relative;">
+      <h2>🎁 Кейс с буквами</h2>
+      <div class="case-reel-wrap">
+        <div class="case-reel-pointer"></div>
+        <div class="case-reel-window"><div id="case-reel" class="case-reel"></div></div>
+        <div id="case-confetti"></div>
+      </div>
+      <p id="case-status" style="margin: 15px 0; font-weight: bold; color: #aaa;"></p>
+      <div id="case-result" class="case-result hidden"></div>
+      <button id="btn-case-spin" onclick="spinCase()" class="gold">Открыть кейс</button>
+      <button onclick="closeCaseModal()" class="secondary">Закрыть</button>
+    </div>
+  </div>
+
   <!-- МОДАЛКА ПОДАРКА МОНЕТ -->
   <div id="gift-modal" class="modal-overlay hidden">
     <div class="modal" style="max-width: 400px;">
@@ -400,6 +419,7 @@
   <script src="js/game-input.js"></script>
   <script src="js/game-render.js"></script>
   <script src="js/consumables.js"></script>
+  <script src="js/cases.js"></script>
   <script src="js/stats.js"></script>
   <script src="js/gifts.js"></script>
   <script src="js/main.js"></script>       <!-- вся инициализация: строго последним -->

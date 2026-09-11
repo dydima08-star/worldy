@@ -87,7 +87,8 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       { id: 'rank_master', name: 'Мастер', icon: '🔥', desc: `Ранг «${RANKS[3].name}» (${RANKS[3].minRP} RP)`, check: (h, ctx) => ctx.rp >= RANKS[3].minRP },
       { id: 'shopaholic', name: 'Шопоголик', icon: '🛍️', desc: '10 разных улучшений в инвентаре', check: (h, ctx) => ctx.invCount >= 10 },
       { id: 'miner_boss', name: 'Энергокризис решён', icon: '🔋', desc: 'Максимальный уровень батареи майнера', check: (h, ctx) => ctx.minerBattery >= 7 },
-      { id: 'generous', name: 'Щедрая душа', icon: '🎁', desc: 'Отправлен хотя бы 1 подарок', check: (h, ctx) => ctx.gaveGift }
+      { id: 'generous', name: 'Щедрая душа', icon: '🎁', desc: 'Отправлен хотя бы 1 подарок', check: (h, ctx) => ctx.gaveGift },
+      { id: 'case_jackpot', name: 'Джекпот', icon: '🎰', desc: 'Выбить 3 буквы за один кейс (1% шанс)', check: (h, ctx) => ctx.caseJackpot }
     ];
 
     // Проверяет и записывает новые достижения — только для своей роли. Вызывается после:
@@ -108,8 +109,9 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       const minerBattery = globalState.miner?.[myRole]?.batteryLevel || 0;
       const gaveGift = Object.values(globalState.gifts || {}).some(toRole => Object.values(toRole || {}).some(g => g.from === myRole));
       const streaks = computeStreaks(globalState.history?.[myRole] || {});
+      const caseJackpot = !!globalState.caseJackpot?.[myRole];
 
-      const ctx = { wins, maxCombo, rp, invCount, minerBattery, gaveGift, streaks };
+      const ctx = { wins, maxCombo, rp, invCount, minerBattery, gaveGift, streaks, caseJackpot };
 
       const updates = {};
       ACHIEVEMENTS.forEach(a => {

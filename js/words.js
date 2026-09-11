@@ -23,6 +23,9 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
 
         if (isOldSystem || isOldPlayer) {
           db.ref(`wordle_season_v1/words/${key}`).remove(); // Удаляем из БД
+          // Подсказки кейсов привязаны к wordId — иначе caseHints рос бы вечно
+          db.ref(`wordle_season_v1/caseHints/1/${key}`).remove();
+          db.ref(`wordle_season_v1/caseHints/2/${key}`).remove();
           delete wordsObj[key]; // Удаляем из локального объекта, чтобы не рендерилось
         }
       }

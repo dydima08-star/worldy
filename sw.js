@@ -4,7 +4,7 @@
 
 // Версию поднимать вручную в каждом коммите, который меняет состав кэша или сам sw.js —
 // иначе у уже установивших PWA игроков останется старый шелл.
-const CACHE = 'wordle-v2';
+const CACHE = 'wordle-v3';
 
 const PRECACHE_URLS = [
   './',
@@ -31,6 +31,7 @@ const PRECACHE_URLS = [
   './js/game-input.js',
   './js/game-render.js',
   './js/consumables.js',
+  './js/cases.js',
   './js/stats.js',
   './js/gifts.js',
   './js/pwa.js',

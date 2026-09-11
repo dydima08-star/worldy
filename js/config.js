@@ -118,5 +118,12 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
     const VOWELS = ['А', 'Е', 'И', 'О', 'У', 'Ы', 'Э', 'Ю', 'Я'];
     const RUS_ALPHABET = 'АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ'.split('');
 
+    // КЕЙСЫ С БУКВАМИ (бесплатный суточный барабан прямо в игре)
+    const DAILY_CASES = 2;                  // кейсов в сутки на игрока, на все слова сразу
+    const CASE_EXTRA_SPIN_CHANCE = 0.10;    // шанс доп. прокрута (и на 2-й, и на 3-й) => 90% / 9% / 1%
+    const CASE_MAX_SPINS = 3;
+    const CASE_GREEN_CHANCE = 0.10;         // из букв, которые есть в слове, доля зелёных (с позицией)
+    const CASE_ALPHABET = 'АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ'.split(''); // 32, без Ё (игра приводит Ё к Е)
+
     const IN_GAME_CONSUMABLES = ['cons_target', 'cons_finish_mark', 'cons_rand_green', 'cons_deep_clean',
       'cons_pack_clean', 'cons_vowel_scan', 'cons_life_saver', 'cons_xray', 'cons_pack_xray', 'cons_va_bank'];

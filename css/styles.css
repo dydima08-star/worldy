@@ -248,6 +248,28 @@
       .wheel-label span { font-size: 0.62rem; }
     }
 
+    /* Кейсы с буквами: кнопка над клавиатурой */
+    .case-bar { width:100%; max-width:500px; margin-bottom:10px; }
+    .case-bar button { width:100%; margin:0; background: linear-gradient(45deg, #4d8a48, #6AAA64); color:#fff; }
+    .case-bar button.disabled, .case-bar button:disabled { filter: grayscale(0.6); opacity: 0.6; cursor: not-allowed; }
+
+    /* Модалка кейса: горизонтальный барабан букв */
+    .case-reel-wrap { position: relative; margin: 16px auto; }
+    .case-reel-window { overflow: hidden; width: 100%; max-width: 260px; height: 44px; margin: 0 auto; border: 2px solid var(--border-color); border-radius: 8px; background: #1a1a1b; }
+    .case-reel { display: flex; height: 44px; will-change: transform; }
+    .case-reel span { flex: 0 0 44px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: bold; color: #fff; }
+    .case-reel-pointer { pointer-events: none; position: absolute; top: -6px; left: 50%; transform: translateX(-50%); z-index: 3; width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 14px solid var(--rp-color); filter: drop-shadow(0 0 6px var(--rp-color)); }
+    #case-confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 5; }
+    #case-confetti i { position: absolute; top: -10px; width: 7px; height: 11px; border-radius: 2px; animation: conf-fall 1.4s ease-in forwards; }
+
+    .case-result { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 12px 0; animation: prize-in 0.35s ease-out; }
+    .case-drop-card { border-radius: 8px; padding: 10px 14px; min-width: 72px; text-align: center; }
+    .case-drop-card b { display: block; font-size: 1.3rem; color: #fff; }
+    .case-drop-card span { display: block; font-size: 0.68rem; color: rgba(255,255,255,0.85); margin-top: 2px; }
+    .case-drop-card[data-state="correct"] { background-color: var(--correct-color); }
+    .case-drop-card[data-state="present"] { background-color: var(--present-color); }
+    .case-drop-card[data-state="absent"] { background-color: var(--absent-color); }
+
     /* Убранные (серые) клавиши */
     .key.disabled { background-color: var(--absent-color) !important; color:#666 !important; cursor: not-allowed; opacity: 0.55; }
 
