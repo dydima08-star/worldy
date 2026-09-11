@@ -158,8 +158,13 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
     }
 
     // Один "прокрут" барабана: летящая лента букв, которая тормозит на итоговой букве.
+    // Сдвиг считаем от РЕАЛЬНОЙ ширины окошка, чтобы буква-победитель вставала точно
+    // по центру под стрелкой-указателем, а не у левого края (окошко может быть уже 260px
+    // на узких экранах, поэтому ширину нельзя зашивать константой).
     function animateReel(letter, onDone) {
       const reel = document.getElementById('case-reel');
+      const windowEl = reel.parentElement; // .case-reel-window
+      const ITEM_W = 44;
       const strip = [];
       for (let i = 0; i < 24; i++) strip.push(CASE_ALPHABET[Math.floor(Math.random() * CASE_ALPHABET.length)]);
       strip.push(letter);
@@ -167,9 +172,13 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       reel.style.transition = 'none';
       reel.style.transform = 'translateX(0)';
       void reel.offsetWidth;
+
+      const winnerCenter = (strip.length - 1) * ITEM_W + ITEM_W / 2;
+      const targetX = windowEl.clientWidth / 2 - winnerCenter;
+
       requestAnimationFrame(() => {
         reel.style.transition = 'transform 1.1s cubic-bezier(0.12, 0.75, 0.2, 1)';
-        reel.style.transform = `translateX(-${(strip.length - 1) * 44}px)`;
+        reel.style.transform = `translateX(${targetX}px)`;
       });
       caseReelTimer = setTimeout(onDone, 1200);
     }
