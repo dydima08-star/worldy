@@ -90,9 +90,9 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
     ];
 
     // УЛУЧШЕНИЯ МАЙНЕРА
-    const MINER_COST = 20000;
+    const MINER_COST = 10000;
     const EARNING_UPGRADES = [
-      { level: 1, coinsPerHour: 10000, price: 0 }, // базовый уровень после покупки
+      { level: 1, coinsPerHour: 10, price: 0 }, // базовый уровень после покупки
       { level: 2, coinsPerHour: 20, price: 5000 },
       { level: 3, coinsPerHour: 30, price: 15000 },
       { level: 4, coinsPerHour: 35, price: 30000 },

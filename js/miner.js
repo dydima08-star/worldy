@@ -28,7 +28,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       }
 
       // Вычисляем текущий доход
-      let coinsPerHour = 10000;
+      let coinsPerHour = 10;
       if (earningLevel <= 5) {
         coinsPerHour = EARNING_UPGRADES[earningLevel - 1].coinsPerHour;
       } else {
@@ -185,7 +185,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       if (!minerData.purchased) return;
 
       const earningLevel = minerData.earningLevel || 1;
-      let coinsPerHour = 10000;
+      let coinsPerHour = 10;
       if (earningLevel <= 5) {
         coinsPerHour = EARNING_UPGRADES[earningLevel - 1].coinsPerHour;
       } else {
