@@ -92,7 +92,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
     function startWord(id) {
       activeWordId = id;
       const wObj = globalState.words[id];
-      sessionGreens = {}; sessionPresent = []; sessionRemoved = []; sessionExtraAttempts = 0;
+      sessionGreens = {}; sessionPresent = []; sessionRemoved = []; sessionCaseGray = []; sessionExtraAttempts = 0;
       sessionStartTs = getNow();   // для длительности партии (history.ms) и товара day_blitz_hunt
       selectedIndex = 0;
       applyStartEffects(wObj);

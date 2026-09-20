@@ -31,6 +31,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       Object.values(sessionGreens).forEach(l => known.add(l));
       sessionPresent.forEach(l => known.add(l));
       sessionRemoved.forEach(l => known.add(l));
+      sessionCaseGray.forEach(l => known.add(l));
       (wordObj.attempts || []).forEach(a => String(a).toUpperCase().split('').forEach(l => known.add(l)));
       return known;
     }
@@ -86,7 +87,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       drops.forEach(d => {
         if (d.kind === 'correct') sessionGreens[d.idx] = d.letter;
         else if (d.kind === 'present') { if (!sessionPresent.includes(d.letter)) sessionPresent.push(d.letter); }
-        else { if (!sessionRemoved.includes(d.letter)) sessionRemoved.push(d.letter); }
+        else { if (!sessionCaseGray.includes(d.letter)) sessionCaseGray.push(d.letter); }
       });
       renderBoard();
     }
@@ -98,7 +99,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       if (!saved) return;
       Object.entries(saved.greens || {}).forEach(([idx, letter]) => { sessionGreens[Number(idx)] = letter; });
       Object.keys(saved.present || {}).forEach(l => { if (!sessionPresent.includes(l)) sessionPresent.push(l); });
-      Object.keys(saved.gray || {}).forEach(l => { if (!sessionRemoved.includes(l)) sessionRemoved.push(l); });
+      Object.keys(saved.gray || {}).forEach(l => { if (!sessionCaseGray.includes(l)) sessionCaseGray.push(l); });
     }
 
     // Сливает новые дропы в уже сохранённый узел caseHints/{role}/{wordId} (для одного update()).
