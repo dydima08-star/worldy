@@ -13,7 +13,8 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
     let selectedIndex = 0;      // активная клетка (для вставки в любое место)
     let sessionGreens = {};    // {idx: буква} — открытые зелёные буквы (подсказка, но клетку можно перезаписать)
     let sessionPresent = [];    // буквы-подсказки (оранжевые)
-    let sessionRemoved = [];    // серые буквы, убранные с клавиатуры
+    let sessionRemoved = [];    // серые буквы, убранные с клавиатуры (бустеры — ввод заблокирован)
+    let sessionCaseGray = [];   // серые буквы из кейса: подсвечены серым, но ими можно писать
     let sessionExtraAttempts = 0;
     let sessionStartTs = 0;    // getNow() на момент startWord() — для history.ms и day_blitz_hunt
 

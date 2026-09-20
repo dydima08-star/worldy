@@ -12,6 +12,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       if (greens.length) parts.push('🟩 Открыто: ' + greens.map(i => `<b>${i + 1}-я = ${sessionGreens[i]}</b>`).join(', '));
       if (sessionPresent.length) parts.push('🟧 Есть в слове: <b>' + [...new Set(sessionPresent)].join(', ') + '</b>');
       if (sessionRemoved.length) parts.push('⛔ Убрано с клавиатуры букв: <b>' + sessionRemoved.length + '</b>');
+      if (sessionCaseGray.length) parts.push('⬜ Нет в слове: <b>' + [...new Set(sessionCaseGray)].join(', ') + '</b>');
       const extra = getMaxAttempts() - MAX_ATTEMPTS;
       if (extra > 0) parts.push('➕ Доп. попыток: <b>' + extra + '</b>');
       if (parts.length) { bar.innerHTML = parts.join('<br>'); bar.classList.remove('hidden'); }
@@ -71,7 +72,9 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         btn.removeAttribute('data-state');
         btn.classList.remove('disabled');
         if (sessionRemoved.includes(k)) { btn.classList.add('disabled'); btn.dataset.state = 'absent'; }
+        // Серые из кейса только подсвечиваются: такой буквой всё равно можно писать.
         else if (keyStates[k]) btn.dataset.state = keyStates[k];
+        else if (sessionCaseGray.includes(k)) btn.dataset.state = 'absent';
       });
 
       renderHintBar();
