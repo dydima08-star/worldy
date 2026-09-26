@@ -116,7 +116,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
 
         const canAfford = myCoins >= upgrade.price;
         const card = document.createElement('div');
-        card.style.cssText = 'background:#272729;border:1px solid #2ecc71;border-radius:8px;padding:10px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;';
+        card.style.cssText = 'background:var(--surface-2);border:1px solid #2ecc71;border-radius:8px;padding:10px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;';
         card.innerHTML = `
           <div>
             <div style="font-weight:bold;color:#fff;">💰 Уровень ${upgrade.level}</div>
@@ -144,7 +144,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         const canAfford = myCoins >= upgrade.price;
 
         const card = document.createElement('div');
-        card.style.cssText = 'background:#272729;border:1px solid #f39c12;border-radius:8px;padding:10px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;';
+        card.style.cssText = 'background:var(--surface-2);border:1px solid #f39c12;border-radius:8px;padding:10px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;';
         card.innerHTML = `
           <div>
             <div style="font-weight:bold;color:#fff;">🔋 Уровень ${upgrade.level}</div>

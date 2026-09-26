@@ -108,7 +108,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       selectedIndex = firstEmpty(wObj.len);
       const msgEl = document.getElementById('game-status-msg');
       msgEl.dataset.base = '';
-      msgEl.style.color = 'var(--accent-color)';
+      msgEl.style.color = 'var(--status-color)';
       msgEl.innerText = id === MARATHON_WORD_ID
         ? marathonStatusLine(wObj)
         : isGameOver(wObj)

@@ -20,12 +20,12 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
 
       // Обновляем кнопки переключателя
       document.getElementById('stats-btn-p1').innerText = `${playerAvatar(1)} ${playerName(1)}`;
-      document.getElementById('stats-btn-p1').style.background = playerNum === 1 ? 'var(--accent-color)' : '#272729';
+      document.getElementById('stats-btn-p1').style.background = playerNum === 1 ? 'var(--accent-color)' : 'var(--surface-2)';
       document.getElementById('stats-btn-p1').style.color = playerNum === 1 ? 'white' : '#aaa';
       document.getElementById('stats-btn-p1').style.border = playerNum === 1 ? 'none' : '1px solid var(--border-color)';
 
       document.getElementById('stats-btn-p2').innerText = `${playerAvatar(2)} ${playerName(2)}`;
-      document.getElementById('stats-btn-p2').style.background = playerNum === 2 ? 'var(--accent-color)' : '#272729';
+      document.getElementById('stats-btn-p2').style.background = playerNum === 2 ? 'var(--accent-color)' : 'var(--surface-2)';
       document.getElementById('stats-btn-p2').style.color = playerNum === 2 ? 'white' : '#aaa';
       document.getElementById('stats-btn-p2').style.border = playerNum === 2 ? 'none' : '1px solid var(--border-color)';
 
@@ -89,42 +89,42 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-          <div style="background: #272729; padding: 12px; border-radius: 8px; text-align: center;">
+          <div style="background: var(--surface-2); padding: 12px; border-radius: 8px; text-align: center;">
             <div style="font-size: 1.8rem; font-weight: bold; color: #2ecc71;">${wins}</div>
             <div style="font-size: 0.8rem; color: #aaa;">Победы</div>
           </div>
-          <div style="background: #272729; padding: 12px; border-radius: 8px; text-align: center;">
+          <div style="background: var(--surface-2); padding: 12px; border-radius: 8px; text-align: center;">
             <div style="font-size: 1.8rem; font-weight: bold; color: #e74c3c;">${losses}</div>
             <div style="font-size: 0.8rem; color: #aaa;">Поражения</div>
           </div>
         </div>
 
-        <div style="background: #272729; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+        <div style="background: var(--surface-2); padding: 12px; border-radius: 8px; margin-bottom: 15px;">
           <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
             <span style="font-size: 0.85rem; color: #aaa;">Процент побед</span>
             <span style="font-size: 0.9rem; font-weight: bold; color: ${winRate >= 70 ? '#2ecc71' : winRate >= 50 ? '#f39c12' : '#e74c3c'};">${winRate}%</span>
           </div>
-          <div style="width: 100%; height: 8px; background: #1a1a1b; border-radius: 4px; overflow: hidden;">
+          <div style="width: 100%; height: 8px; background: var(--surface-0); border-radius: 4px; overflow: hidden;">
             <div style="width: ${winRate}%; height: 100%; background: linear-gradient(90deg, #2ecc71, #27ae60); transition: width 0.3s;"></div>
           </div>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 15px;">
-          <div style="background: #272729; padding: 10px; border-radius: 8px; text-align: center;">
+          <div style="background: var(--surface-2); padding: 10px; border-radius: 8px; text-align: center;">
             <div style="font-size: 1.3rem; font-weight: bold; color: #4ab8e2;">${playerWords.length}</div>
             <div style="font-size: 0.75rem; color: #aaa;">Всего игр</div>
           </div>
-          <div style="background: #272729; padding: 10px; border-radius: 8px; text-align: center;">
+          <div style="background: var(--surface-2); padding: 10px; border-radius: 8px; text-align: center;">
             <div style="font-size: 1.3rem; font-weight: bold; color: #9b59b6;">${avgLength}</div>
             <div style="font-size: 0.75rem; color: #aaa;">Ср. длина</div>
           </div>
-          <div style="background: #272729; padding: 10px; border-radius: 8px; text-align: center;">
+          <div style="background: var(--surface-2); padding: 10px; border-radius: 8px; text-align: center;">
             <div style="font-size: 1.3rem; font-weight: bold; color: #ff9f43;">${maxCombo}/5</div>
             <div style="font-size: 0.75rem; color: #aaa;">Рекорд комбо</div>
           </div>
         </div>
 
-        <div style="background: #272729; padding: 12px; border-radius: 8px;">
+        <div style="background: var(--surface-2); padding: 12px; border-radius: 8px;">
           <div style="font-size: 0.9rem; font-weight: bold; margin-bottom: 10px; color: #fff;">📈 Распределение побед по попыткам</div>
           ${attemptsDistribution.map((count, i) => {
             const maxCount = Math.max(...attemptsDistribution);
@@ -132,7 +132,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
             return `
               <div style="display: flex; align-items: center; margin-bottom: 6px;">
                 <div style="width: 25px; font-size: 0.8rem; color: #aaa;">${i + 1}</div>
-                <div style="flex: 1; height: 20px; background: #1a1a1b; border-radius: 4px; overflow: hidden; margin: 0 8px;">
+                <div style="flex: 1; height: 20px; background: var(--surface-0); border-radius: 4px; overflow: hidden; margin: 0 8px;">
                   <div style="width: ${percent}%; height: 100%; background: linear-gradient(90deg, #4ab8e2, #357abd); display: flex; align-items: center; justify-content: flex-end; padding-right: 5px;">
                     ${count > 0 ? `<span style="font-size: 0.75rem; color: #fff; font-weight: bold;">${count}</span>` : ''}
                   </div>

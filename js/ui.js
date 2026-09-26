@@ -65,6 +65,29 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       closeProfileModal();
     }
 
+    // Подписи под крупными кнопками меню и аватар в кнопке профиля
+    function renderMenuStatus(data) {
+      const profileBtn = document.getElementById('btn-go-profile');
+      if (profileBtn) profileBtn.textContent = myRole ? playerAvatar(myRole) : '👤';
+      if (!myRole) return;
+
+      // Слово дня: id как в startDailyWord() (words.js) — по UTC-дате устройства
+      const dailyId = `daily_${new Date().toISOString().slice(0, 10)}_p${myRole}`;
+      const dailyDone = !!data.history?.[myRole]?.[dailyId] || data.words?.[dailyId]?.status === 'completed';
+      const dailySub = document.getElementById('menu-daily-sub');
+      if (dailySub) dailySub.textContent = dailyDone ? '✅ Сыграно сегодня' : 'Ещё не сыграно сегодня';
+
+      const marSub = document.getElementById('menu-marathon-sub');
+      if (marSub && typeof marathonState === 'function') {
+        const st = marathonState(myRole);
+        marSub.textContent =
+          st.status === 'done'    ? `🏆 Все ${MARATHON_TOTAL} уровней пройдены!` :
+          st.status === 'failed'  ? `Остановка на ${st.level}-м · завтра новый` :
+          st.status === 'playing' ? `Уровень ${st.level} из ${MARATHON_TOTAL}` :
+                                    `${MARATHON_TOTAL} уровней · начни забег`;
+      }
+    }
+
     function renderUI(data) {
       globalState = data;
 
@@ -107,6 +130,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         card.style.boxShadow = lord ? '0 0 12px rgba(155,89,182,0.6)' : (gold ? '0 0 10px rgba(255,215,0,0.45)' : '');
       });
 
+      renderMenuStatus(data);
       renderWords(data.words || {});
       if (!screenShop.classList.contains('hidden')) renderShop();
       if (!screenGame.classList.contains('hidden') && activeWordId && getActiveWord()) { renderBoard(); renderCaseBar(); }

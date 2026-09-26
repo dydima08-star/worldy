@@ -15,11 +15,11 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       currentHistoryPlayer = playerNum;
       __historyRenderCount = HISTORY_PAGE;
 
-      document.getElementById('history-btn-p1').style.background = playerNum === 1 ? 'var(--accent-color)' : '#272729';
+      document.getElementById('history-btn-p1').style.background = playerNum === 1 ? 'var(--accent-color)' : 'var(--surface-2)';
       document.getElementById('history-btn-p1').style.color = playerNum === 1 ? 'white' : '#aaa';
       document.getElementById('history-btn-p1').style.border = playerNum === 1 ? 'none' : '1px solid var(--border-color)';
 
-      document.getElementById('history-btn-p2').style.background = playerNum === 2 ? 'var(--accent-color)' : '#272729';
+      document.getElementById('history-btn-p2').style.background = playerNum === 2 ? 'var(--accent-color)' : 'var(--surface-2)';
       document.getElementById('history-btn-p2').style.color = playerNum === 2 ? 'white' : '#aaa';
       document.getElementById('history-btn-p2').style.border = playerNum === 2 ? 'none' : '1px solid var(--border-color)';
 
@@ -90,7 +90,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       const dateLabel = h.date ? formatHistoryDate(h.date) : '—';
       const durationLabel = h.ms ? ' · ' + formatDuration(h.ms) : '';
       return `
-        <div style="background:#272729; border:1px solid var(--border-color); border-radius:8px; padding:10px 12px;">
+        <div style="background:var(--surface-2); border:1px solid var(--border-color); border-radius:8px; padding:10px 12px;">
           <div style="font-weight:bold; color:#fff;">${resultIcon} ${word} <span style="font-weight:normal; color:#aaa; font-size:0.8rem;">(${h.len} букв)</span></div>
           <div style="font-size:0.78rem; color:#999; margin-top:4px;">от ${authorName} · ${h.attempts}/${MAX_ATTEMPTS} попыток · ${dateLabel}${durationLabel}</div>
           ${h.hidden ? '<div style="font-size:0.78rem; color:#e0a040; margin-top:4px;">Сыграйте слово дня, чтобы увидеть ответ</div>' : ''}

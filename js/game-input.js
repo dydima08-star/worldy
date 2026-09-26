@@ -48,7 +48,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       el.innerText = msg;
       clearTimeout(window.__msgT);
       window.__msgT = setTimeout(() => {
-        el.style.color = 'var(--accent-color)';
+        el.style.color = 'var(--status-color)';
         el.innerText = el.dataset.base; el.dataset.base = '';
       }, 1600);
     }

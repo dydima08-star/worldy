@@ -142,8 +142,8 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       grid.innerHTML = ACHIEVEMENTS.map(a => {
         const got = unlocked[a.id];
         const boxStyle = got
-          ? 'background:#272729; border:2px solid var(--gold-color); color:#fff;'
-          : 'background:#1a1a1b; border:2px solid var(--border-color); color:#666;';
+          ? 'background:var(--surface-2); border:2px solid var(--gold-color); color:#fff;'
+          : 'background:var(--surface-0); border:2px solid var(--border-color); color:#666;';
         const dateLabel = (got && got !== true) ? `<div style="font-size:0.6rem; color:#999; margin-top:2px;">${got}</div>` : '';
         return `
           <div title="${a.name}: ${a.desc}" style="${boxStyle} border-radius:8px; padding:8px 4px; text-align:center;">
