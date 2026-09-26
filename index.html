@@ -350,30 +350,33 @@
     </div>
   </div>
 
+  <!-- ЕЖЕДНЕВНЫЙ БОНУС: три сундука, открыть можно один (js/bonus.js) -->
   <div id="bonus-modal" class="modal-overlay hidden">
-    <div class="modal">
-      <h2>🎁 Ежедневный бонус</h2>
-      <div class="wheel-wrap" id="wheel-wrap">
-        <div class="wheel-pointer"></div>
-        <div class="wheel-rotor" id="wheel-rotor">
-          <div class="wheel" id="wheel"></div>
-          <div class="wheel-labels" id="wheel-labels"></div>
-        </div>
-        <div class="wheel-hub">🎁</div>
+    <div class="modal bonus-modal">
+      <h2>🎁 Бонус дня</h2>
+      <p id="bonus-status" class="bonus-status">Выбери один сундук</p>
+      <div class="chest-row" id="chest-row">
+        <button class="chest" data-i="0" onclick="openChest(0)" style="--c1:#b77bff; --c2:#6a4ff0;">
+          <span class="chest-inner"><span class="chest-front"><span class="chest-art"><span class="lid"></span><span class="box"></span><span class="lock"></span></span><span class="chest-hint">Открыть</span></span><span class="chest-back"></span></span>
+        </button>
+        <button class="chest" data-i="1" onclick="openChest(1)" style="--c1:#ff7ac0; --c2:#e0408f;">
+          <span class="chest-inner"><span class="chest-front"><span class="chest-art"><span class="lid"></span><span class="box"></span><span class="lock"></span></span><span class="chest-hint">Открыть</span></span><span class="chest-back"></span></span>
+        </button>
+        <button class="chest" data-i="2" onclick="openChest(2)" style="--c1:#5fd4ff; --c2:#2f7bff;">
+          <span class="chest-inner"><span class="chest-front"><span class="chest-art"><span class="lid"></span><span class="box"></span><span class="lock"></span></span><span class="chest-hint">Открыть</span></span><span class="chest-back"></span></span>
+        </button>
         <div id="confetti"></div>
       </div>
       <div id="bonus-timer-box" class="hidden">
-        <p style="color:#aaa; margin-bottom:4px;">⏳ Следующий бонус через:</p>
+        <p style="color:#ccc; margin-bottom:4px;">⏳ Новые сундуки через:</p>
         <p id="bonus-timer" class="bonus-timer-value">00:00:00</p>
       </div>
-      <p id="bonus-status" style="margin: 15px 0; font-weight: bold; color: #aaa;">🎁 Испытайте удачу!</p>
       <div id="bonus-prize" class="hidden">
-        <p style="color:#6AAA64; font-weight:bold; margin-bottom:6px;">🎉 Ты выиграл:</p>
-        <p id="bonus-prize-label" style="font-weight:bold; font-size:1.1rem;"></p>
+        <p style="color:#7dffa8; font-weight:bold; margin-bottom:6px;">🎉 Твой приз:</p>
+        <p id="bonus-prize-label" style="font-weight:bold; font-size:1.15rem; margin-bottom:12px;"></p>
         <button onclick="closeDailyBonus()" class="gold">Забрать</button>
       </div>
-      <button id="btn-spin" onclick="spinDailyBonus()" class="gold">Крутить колесо</button>
-      <button onclick="closeDailyBonus()" class="secondary">Закрыть</button>
+      <button id="bonus-close-btn" onclick="closeDailyBonus()" class="secondary">Закрыть</button>
     </div>
   </div>
 

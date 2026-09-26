@@ -231,29 +231,13 @@
     /* Пустая клетка с известной зелёной буквой: только подсветка позиции, буква НЕ подставляется */
     .tile.green-hint { border-color: var(--correct-color); background-color: rgba(83,141,78,0.18); box-shadow: inset 0 0 0 2px rgba(83,141,78,0.45); }
 
-    /* Колесо фортуны ежедневного бонуса */
-    .wheel-wrap { position: relative; width: 100%; max-width: 320px; margin: 16px auto; aspect-ratio: 1; }
-    .wheel-rotor { position: absolute; inset: 0; overflow: hidden; pointer-events: none; border-radius: 50%; border: 6px solid #2a2a2c; box-shadow: 0 0 0 3px #6AAA64 inset, 0 10px 30px rgba(0,0,0,0.6); will-change: transform; transition: transform 4.2s cubic-bezier(0.12, 0.75, 0.2, 1); }
-    .wheel-wrap.spent .wheel-rotor { filter: grayscale(0.7) brightness(0.55); transition: none; }
-    .wheel { position: absolute; inset: 0; border-radius: 50%; }
-    .wheel-labels { position: absolute; inset: 0; border-radius: 50%; pointer-events: none; }
-    .wheel-label { position: absolute; inset: 0; display: flex; justify-content: center; transform-origin: 50% 50%; pointer-events: none; }
-    .wheel-label span { font-size: 0.72rem; font-weight: bold; padding-top: 12%; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
-    .wheel-pointer { pointer-events: none; position: absolute; top: -6px; left: 50%; transform: translateX(-50%); z-index: 3; width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 18px solid var(--rp-color); filter: drop-shadow(0 0 6px var(--rp-color)); }
-    .wheel-hub { pointer-events: none; position: absolute; top: 50%; left: 50%; width: 26%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; background: var(--surface-0); border: 3px solid #6AAA64; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; z-index: 2; }
+    /* Ежедневный бонус: конфетти (сами сундуки — в конце файла) */
     #confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 5; }
     #confetti i { position: absolute; top: -10px; width: 7px; height: 11px; border-radius: 2px; animation: conf-fall 1.4s ease-in forwards; }
     @keyframes conf-fall { to { transform: translate(var(--dx), 320px) rotate(540deg); opacity: 0; } }
     .bonus-timer-value { color: var(--gold-color); font-weight: bold; font-family: monospace; font-size: 1.3rem; }
-    #btn-spin { background: linear-gradient(45deg, #4d8a48, #6AAA64); color: #fff; box-shadow: 0 4px 0 #35632f, 0 6px 18px rgba(106,170,100,0.35); transition: transform 0.12s; }
-    #btn-spin:active { transform: translateY(3px); box-shadow: 0 1px 0 #35632f; }
-    #btn-spin:disabled { filter: grayscale(0.6); opacity: 0.6; box-shadow: none; }
     #bonus-prize { border: 1px solid #6AAA64; border-radius: 12px; background: #162015; padding: 14px; margin: 12px 0; animation: prize-in 0.35s ease-out; }
     @keyframes prize-in { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: none; } }
-    @media (max-width: 400px) {
-      .wheel-wrap { max-width: 260px; }
-      .wheel-label span { font-size: 0.62rem; }
-    }
 
     /* Кейсы с буквами: кнопка над клавиатурой */
     .case-bar { width:100%; max-width:500px; margin-bottom:10px; }
@@ -519,7 +503,6 @@
     .avatar-btn.selected { background: rgba(123,97,255,0.30); }
     .inv-card { border-radius: 12px; }
     #bonus-prize { background: rgba(46, 204, 113, 0.14); }
-    .wheel-rotor { border-color: rgba(255,255,255,0.25); }
     .marathon-row { border-radius: 12px; }
     .marathon-row.passed { background: rgba(46, 204, 113, 0.16); border-color: rgba(46, 204, 113, 0.55); }
     .marathon-row.failed { background: rgba(255, 77, 109, 0.16); }
@@ -537,3 +520,76 @@
     body:has(#screen-menu.hidden) .scoreboard,
     body:has(#screen-menu.hidden) .season-banner:not(.offline-banner) { display: none; }
     body:has(#screen-menu.hidden) .app-bar { margin-bottom: 8px; }
+
+    /* ---- Ежедневный бонус: три сундука ----
+       .chest (кнопка) покачивается; .chest-inner переворачивается (rotateY) и показывает
+       .chest-back с призом. Сундук нарисован на CSS: в Юникоде нет эмодзи сундука. */
+    .bonus-status { margin: 6px 0 0; font-weight: 700; color: #e6e0ff; min-height: 1.3em; }
+    .chest-row { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 18px 0 16px; perspective: 900px; }
+    .chest {
+      margin: 0; padding: 0; aspect-ratio: 3 / 4; border: none; border-radius: 18px;
+      background: none; box-shadow: none; animation: chest-bob 2.6s ease-in-out infinite;
+    }
+    .chest:hover { background: none; }
+    .chest:active { transform: none; }
+    .chest[data-i="1"] { animation-delay: 0.35s; }
+    .chest[data-i="2"] { animation-delay: 0.7s; }
+    @keyframes chest-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
+    .chest-inner { position: relative; display: block; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.7s cubic-bezier(0.3, 1.35, 0.5, 1); }
+    .chest-front, .chest-back {
+      position: absolute; inset: 0; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+      backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    }
+    .chest-front {
+      background: linear-gradient(160deg, var(--c1), var(--c2)); border: 1px solid rgba(255,255,255,0.35);
+      box-shadow: 0 8px 22px color-mix(in srgb, var(--c2) 50%, transparent), inset 0 1px 0 rgba(255,255,255,0.45);
+    }
+    .chest-hint { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; color: rgba(255,255,255,0.92); }
+    .chest-back { transform: rotateY(180deg); background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.3); padding: 6px; }
+    .chest.open .chest-inner { transform: rotateY(180deg); }
+
+    .chest-art { position: relative; width: 66%; aspect-ratio: 1 / 0.86; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.35)); }
+    .chest-art .lid {
+      position: absolute; left: 0; right: 0; top: 0; height: 44%;
+      border-radius: 45% 45% 5px 5px / 80% 80% 5px 5px; border: 3px solid #ffd35c;
+      background: linear-gradient(180deg, #b8733a, #7a4419);
+    }
+    .chest-art .box {
+      position: absolute; left: 0; right: 0; bottom: 0; height: 58%; border-radius: 4px 4px 9px 9px; border: 3px solid #ffd35c;
+      background: linear-gradient(90deg, transparent 17%, #ffd35c 17%, #ffd35c 25%, transparent 25%, transparent 75%, #ffd35c 75%, #ffd35c 83%, transparent 83%),
+                  linear-gradient(180deg, #9a5628, #5e3312);
+    }
+    .chest-art .lock {
+      position: absolute; left: 50%; top: 32%; width: 20%; aspect-ratio: 0.8; transform: translateX(-50%);
+      border-radius: 3px 3px 5px 5px; background: linear-gradient(180deg, #fff1a8, #ffc933); box-shadow: 0 0 0 2px #9a6400 inset, 0 0 10px rgba(255,211,92,0.7);
+    }
+    .chest-art .lock::after { content: ''; position: absolute; left: 50%; top: 32%; width: 26%; height: 42%; transform: translateX(-50%); border-radius: 40% 40% 2px 2px; background: #5e3a00; }
+
+    /* Выбранный сундук: тряска → переворот. Остальные потом открываются тусклыми. */
+    .chest.picked { animation: chest-shake 0.6s ease-in-out; }
+    @keyframes chest-shake {
+      0%, 100% { transform: scale(1.06) rotate(0); } 15% { transform: scale(1.08) rotate(-7deg); } 35% { transform: scale(1.08) rotate(7deg); }
+      55% { transform: scale(1.08) rotate(-5deg); } 75% { transform: scale(1.08) rotate(4deg); }
+    }
+    .chest.open { animation: none; }
+    .chest.winner { animation: chest-pop 0.5s ease-out 0.35s both; z-index: 1; }
+    @keyframes chest-pop { 0% { transform: scale(1); } 50% { transform: scale(1.12); } 100% { transform: scale(1.06); } }
+    .chest.missed { opacity: 0.5; filter: saturate(0.5); transition: opacity 0.4s, filter 0.4s; }
+
+    .prize-icon { font-size: 1.9rem; line-height: 1; }
+    .prize-val { font-size: 1.15rem; font-weight: 900; color: #fff; }
+    .prize-sub { font-size: 0.62rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(255,255,255,0.8); }
+    .chest-back[data-tier="uncommon"] { background: linear-gradient(160deg, rgba(79,172,254,0.55), rgba(0,120,255,0.35)); }
+    .chest-back[data-tier="rare"]     { background: linear-gradient(160deg, rgba(180,110,255,0.6), rgba(110,60,230,0.4)); }
+    .chest-back[data-tier="epic"]     { background: linear-gradient(160deg, rgba(255,150,70,0.7), rgba(255,80,120,0.5)); }
+    .chest-back[data-tier="boost"]    { background: linear-gradient(160deg, rgba(0,230,210,0.6), rgba(0,150,255,0.45)); }
+    .chest-back[data-tier="jackpot"]  { background: linear-gradient(160deg, #fff1a8, #ffb020); border-color: #fff3c4; box-shadow: 0 0 26px rgba(255,200,60,0.8); }
+    .chest-back[data-tier="jackpot"] .prize-val, .chest-back[data-tier="jackpot"] .prize-sub { color: #4a2a00; }
+    .chest.winner .chest-back { box-shadow: 0 0 0 2px #fff, 0 0 28px rgba(255,255,255,0.55); }
+
+    /* Бонус уже получен: сундуки «спят» */
+    .chest-row.spent .chest { animation: none; pointer-events: none; filter: grayscale(0.85) brightness(0.6); }
+    @media (prefers-reduced-motion: reduce) { .chest { animation: none; } }
+    .chest-row.spent .chest-hint { visibility: hidden; }
+    #bonus-timer-box { margin-bottom: 14px; }
