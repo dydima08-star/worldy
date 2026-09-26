@@ -67,9 +67,25 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       return `${parseInt(parts[2], 10)} ${months[parseInt(parts[1], 10) - 1]}`;
     }
 
+    // Анти-спойлер: слово дня у обоих игроков одно и то же. Пока я сам не доиграл слово дня,
+    // в истории соперника его слово дня за этот день скрыто — иначе ответ можно подсмотреть.
+    // Прошлые дни не скрываем: сыграть их уже нельзя (старые daily_ удаляет words.js).
+    function isSpoilerDaily(id) {
+      if (currentHistoryPlayer === myRole) return false;
+      const m = /^daily_(\d{4}-\d{2}-\d{2})_p\d$/.exec(id);
+      if (!m) return false;
+      const date = m[1];
+      // Слово дня выбирается по UTC-дате устройства (words.js), getToday() — по серверному времени
+      const deviceToday = new Date().toISOString().slice(0, 10);
+      if (date !== deviceToday && date !== getToday()) return false;
+      const myId = `daily_${date}_p${myRole}`;
+      const iPlayed = !!globalState.history?.[myRole]?.[myId] || globalState.words?.[myId]?.status === 'completed';
+      return !iPlayed;
+    }
+
     function historyCardHtml(h) {
       const resultIcon = h.win ? '🟩' : '🟥';
-      const word = h.word || '—';
+      const word = h.hidden ? '🔒 скрыто' : (h.word || '—');
       const authorName = h.author === 'Система' ? 'Системы 📅' : playerName(h.author);
       const dateLabel = h.date ? formatHistoryDate(h.date) : '—';
       const durationLabel = h.ms ? ' · ' + formatDuration(h.ms) : '';
@@ -77,6 +93,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         <div style="background:#272729; border:1px solid var(--border-color); border-radius:8px; padding:10px 12px;">
           <div style="font-weight:bold; color:#fff;">${resultIcon} ${word} <span style="font-weight:normal; color:#aaa; font-size:0.8rem;">(${h.len} букв)</span></div>
           <div style="font-size:0.78rem; color:#999; margin-top:4px;">от ${authorName} · ${h.attempts}/${MAX_ATTEMPTS} попыток · ${dateLabel}${durationLabel}</div>
+          ${h.hidden ? '<div style="font-size:0.78rem; color:#e0a040; margin-top:4px;">Сыграйте слово дня, чтобы увидеть ответ</div>' : ''}
         </div>
       `;
     }
@@ -90,7 +107,8 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         return;
       }
 
-      const entries = Object.values(globalState.history?.[currentHistoryPlayer] || {})
+      const entries = Object.entries(globalState.history?.[currentHistoryPlayer] || {})
+        .map(([id, h]) => isSpoilerDaily(id) ? { ...h, hidden: true } : h)
         .filter(historyMatchesFilter)
         .sort((a, b) => (b.ts || 0) - (a.ts || 0) || (b.date || '').localeCompare(a.date || ''));
 
