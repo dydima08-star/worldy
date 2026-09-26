@@ -127,3 +127,38 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
 
     const IN_GAME_CONSUMABLES = ['cons_target', 'cons_finish_mark', 'cons_rand_green', 'cons_deep_clean',
       'cons_pack_clean', 'cons_vowel_scan', 'cons_life_saver', 'cons_xray', 'cons_pack_xray', 'cons_va_bank'];
+
+    // ♾️ МАРАФОН: 20 уровней в день, сброс в 00:00 по местному времени.
+    // len — длина слова (списки слов в js/marathon-words.js), tier — подпись сложности,
+    // reward — очки 🎯 за прохождение уровня (начисляются сразу, проигрыш их не забирает).
+    //
+    // Экономика: обычное слово даёт ~250-500 🎯, колесо в среднем ~360 🎯 в день,
+    // курс обмена 10:1, а «навсегда»-товары стоят 4 000-62 000 🪙 (40-620 тыс. 🎯).
+    // Типичный марафон (упор в 10-13 уровень) = ~1 000-1 700 🎯 ≈ 100-170 🪙 —
+    // примерно как пара-тройка обычных слов, т.е. заметно, но экономику не ломает.
+    // Полное прохождение всех 20 уровней = 5 150 🎯 ≈ 515 🪙, и это редкость.
+    // Бусты колеса, «Титул Лорда» и прочие множители очков к марафону НЕ применяются —
+    // так его вклад в экономику остаётся предсказуемым. RP, комбо и история матчей не меняются.
+    const MARATHON_LEVELS = [
+      { len: 4, tier: 'частое',       reward: 30 },
+      { len: 5, tier: 'частое',       reward: 40 },
+      { len: 6, tier: 'частое',       reward: 50 },
+      { len: 5, tier: 'среднее',      reward: 60 },
+      { len: 7, tier: 'частое',       reward: 80 },
+      { len: 6, tier: 'среднее',      reward: 100 },
+      { len: 4, tier: 'среднее',      reward: 120 },
+      { len: 8, tier: 'частое',       reward: 140 },
+      { len: 7, tier: 'среднее',      reward: 160 },
+      { len: 5, tier: 'редкое',       reward: 190 },
+      { len: 6, tier: 'редкое',       reward: 220 },
+      { len: 8, tier: 'среднее',      reward: 250 },
+      { len: 9, tier: 'среднее',      reward: 280 },
+      { len: 4, tier: 'редкое',       reward: 320 },
+      { len: 7, tier: 'редкое',       reward: 360 },
+      { len: 5, tier: 'очень редкое', reward: 400 },
+      { len: 8, tier: 'редкое',       reward: 450 },
+      { len: 6, tier: 'очень редкое', reward: 500 },
+      { len: 7, tier: 'очень редкое', reward: 600 },
+      { len: 9, tier: 'редкое',       reward: 800 }
+    ];
+    const MARATHON_WORD_ID = '__marathon__';   // activeWordId, пока идёт уровень марафона

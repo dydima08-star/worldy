@@ -4,7 +4,7 @@
 
 // Версию поднимать вручную в каждом коммите, который меняет состав кэша или сам sw.js —
 // иначе у уже установивших PWA игроков останется старый шелл.
-const CACHE = 'wordle-v5';
+const CACHE = 'wordle-v6';
 
 const PRECACHE_URLS = [
   './',
@@ -14,6 +14,7 @@ const PRECACHE_URLS = [
   './js/auth.js',
   './js/firebase.js',
   './js/words-data.js',
+  './js/marathon-words.js',
   './js/dictionary.js',
   './js/config.js',
   './js/state.js',
@@ -32,6 +33,7 @@ const PRECACHE_URLS = [
   './js/game-render.js',
   './js/consumables.js',
   './js/cases.js',
+  './js/marathon.js',
   './js/stats.js',
   './js/gifts.js',
   './js/pwa.js',

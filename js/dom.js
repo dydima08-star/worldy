@@ -12,6 +12,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
     const screenStats = document.getElementById('screen-stats');
 
     const screenMiner = document.getElementById('screen-miner');
+    const screenMarathon = document.getElementById('screen-marathon');
 
     function showScreen(sc) {
       document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));

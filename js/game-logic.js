@@ -16,6 +16,12 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       return base;
     }
 
+    // Текущее слово на игровом экране: обычное (words/{id}) или слово уровня марафона (marathon/{роль}/word)
+    function getActiveWord() {
+      if (activeWordId === MARATHON_WORD_ID) return marathonActiveWord();
+      return globalState?.words?.[activeWordId];
+    }
+
     // Игра завершена? (отгадано или закончились попытки)
     function isSolved(w) {
       const s = w.secret.toUpperCase();
@@ -91,20 +97,23 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
 
     function startWord(id) {
       activeWordId = id;
-      const wObj = globalState.words[id];
+      const wObj = getActiveWord();
+      if (!wObj) { activeWordId = null; return; }
       sessionGreens = {}; sessionPresent = []; sessionRemoved = []; sessionCaseGray = []; sessionExtraAttempts = 0;
       sessionStartTs = getNow();   // для длительности партии (history.ms) и товара day_blitz_hunt
       selectedIndex = 0;
       applyStartEffects(wObj);
-      applyCaseHints(id, wObj);   // подсказки, открытые кейсом ранее — переживают перезагрузку, в отличие от бустерных
+      if (id !== MARATHON_WORD_ID) applyCaseHints(id, wObj);   // подсказки, открытые кейсом ранее — переживают перезагрузку, в отличие от бустерных
       currentGuess = buildGuessTemplate(wObj.len);   // открытые буквы подставлены, но их можно стереть/заменить
       selectedIndex = firstEmpty(wObj.len);
       const msgEl = document.getElementById('game-status-msg');
       msgEl.dataset.base = '';
       msgEl.style.color = 'var(--accent-color)';
-      msgEl.innerText = isGameOver(wObj)
-        ? '✅ Это слово уже сыграно'
-        : (wObj.author === 'Система' ? '📅 Слово дня' : `Слово от ${playerName(wObj.author)} (${wObj.len} букв)`);
+      msgEl.innerText = id === MARATHON_WORD_ID
+        ? marathonStatusLine(wObj)
+        : isGameOver(wObj)
+          ? '✅ Это слово уже сыграно'
+          : (wObj.author === 'Система' ? '📅 Слово дня' : `Слово от ${playerName(wObj.author)} (${wObj.len} букв)`);
       showScreen(screenGame);
       renderConsumableBar();
       renderCaseBar();
@@ -125,7 +134,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
     }
 
     function trySubmit() {
-      const wordObj = globalState.words[activeWordId];
+      const wordObj = getActiveWord();
       if (isGameOver(wordObj)) return;
       const guess = currentGuess.join('').toUpperCase();
       const secret = wordObj.secret.toUpperCase();
@@ -139,7 +148,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
     }
 
     function submitAttempt(guess) {
-      const wordObj = globalState.words[activeWordId];
+      const wordObj = getActiveWord();
       const attempts = wordObj.attempts || [];
       attempts.push(guess);
       wordObj.attempts = attempts;   // фиксируем локально, чтобы сразу заблокировать повторный ввод
@@ -152,6 +161,12 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
 
       currentGuess = buildGuessTemplate(wordObj.len);
       selectedIndex = firstEmpty(wordObj.len);
+
+      // Марафон: свои очки за уровень, RP/комбо/история не меняются — см. js/marathon.js
+      if (activeWordId === MARATHON_WORD_ID) {
+        marathonSubmit(wordObj, attempts, isWin, isLose);
+        return;
+      }
 
       if (isWin || isLose) {
         let rpChange = 0, coinsEarned = 0, pointsEarned = 0;
@@ -257,8 +272,12 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
     }
     function closeResult() {
       document.getElementById('result-modal').classList.add('hidden');
+      document.getElementById('result-next-btn').classList.add('hidden');
+      document.getElementById('result-close-btn').innerText = 'Понятно';
+      const fromMarathon = activeWordId === MARATHON_WORD_ID;
       activeWordId = null;
-      showScreen(screenMenu);
+      if (fromMarathon) openMarathon();
+      else showScreen(screenMenu);
     }
 
     // Форматирует длительность партии (ms) для модалки результата и истории матчей

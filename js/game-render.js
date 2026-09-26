@@ -20,7 +20,8 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
     }
 
     function renderBoard() {
-      const wordObj = globalState.words[activeWordId];
+      const wordObj = getActiveWord();
+      if (!wordObj) return;
       const grid = document.getElementById('grid');
       const len = wordObj.len;
       const maxAtt = getMaxAttempts();

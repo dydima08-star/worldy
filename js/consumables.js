@@ -10,7 +10,8 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
     function renderConsumableBar() {
       const bar = document.getElementById('game-consumables');
       bar.innerHTML = '';
-      const wordObj = globalState.words[activeWordId];
+      const wordObj = getActiveWord();
+      if (!wordObj) return;
       const inv = globalState?.inventory?.[myRole] || {};
       let any = false;
       if (!isGameOver(wordObj)) {
@@ -31,7 +32,8 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
     }
 
     function useConsumable(id) {
-      const wordObj = globalState.words[activeWordId];
+      const wordObj = getActiveWord();
+      if (!wordObj) return;
       if (isGameOver(wordObj)) return;
       const secret = wordObj.secret.toUpperCase();
       const len = wordObj.len;
@@ -72,7 +74,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       if (!globalState.inventory[myRole]) globalState.inventory[myRole] = {};
       globalState.inventory[myRole][id] = { count: count - 1 };
       db.ref(`wordle_season_v1/inventory/${myRole}/${id}`).set({ count: count - 1 });
-      selectedIndex = firstEmpty(globalState.words[activeWordId].len);
+      selectedIndex = firstEmpty(getActiveWord().len);
       renderConsumableBar();
       renderBoard();
     }

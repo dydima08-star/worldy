@@ -109,7 +109,8 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
 
       renderWords(data.words || {});
       if (!screenShop.classList.contains('hidden')) renderShop();
-      if (!screenGame.classList.contains('hidden') && activeWordId) { renderBoard(); renderCaseBar(); }
+      if (!screenGame.classList.contains('hidden') && activeWordId && getActiveWord()) { renderBoard(); renderCaseBar(); }
+      if (!screenMarathon.classList.contains('hidden')) renderMarathon();
       if (!screenMiner.classList.contains('hidden')) renderMiner();
       if (!document.getElementById('screen-history').classList.contains('hidden')) renderHistory();
     }

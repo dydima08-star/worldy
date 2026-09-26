@@ -77,6 +77,9 @@
     <button id="btn-daily-word" onclick="startDailyWord()" class="gold" style="background: linear-gradient(45deg, #20bf6b, #0fb9b1); color: white;">
       📅 Слово дня (Ежедневное)
     </button>
+    <button id="btn-go-marathon" onclick="openMarathon()" class="gold" style="background: linear-gradient(45deg, #e84393, #fd79a8); color: white;">
+      ♾️ Марафон (20 уровней в день)
+    </button>
     <button id="btn-go-miner" onclick="showScreen(screenMiner)" class="gold" style="background: linear-gradient(45deg, #f39c12, #e67e22); color: white;">
       ⛏️ Майнер монет
     </button>
@@ -242,6 +245,15 @@
     </div>
   </div>
 
+  <!-- МАРАФОН: 20 уровней в день, см. js/marathon.js -->
+  <div id="screen-marathon" class="screen hidden">
+    <div class="menu-box" style="padding: 14px;">
+      <h3 style="text-align: center; margin-bottom: 12px;">♾️ Марафон</h3>
+      <div id="marathon-body"></div>
+      <button onclick="showScreen(screenMenu)" class="secondary" style="margin-top: 12px;">⬅️ Вернуться в меню</button>
+    </div>
+  </div>
+
   <!-- МАЙНЕР МОНЕТ -->
   <div id="screen-miner" class="screen hidden">
     <div class="menu-box" style="padding: 16px;">
@@ -294,7 +306,8 @@
     <div class="modal">
       <h2 id="result-title"></h2>
       <p id="result-desc" style="margin: 15px 0; color:#ccc;"></p>
-      <button onclick="closeResult()">Понятно</button>
+      <button id="result-next-btn" onclick="marathonNext()" class="gold hidden">▶️ Следующий уровень</button>
+      <button id="result-close-btn" onclick="closeResult()">Понятно</button>
     </div>
   </div>
 
@@ -401,6 +414,7 @@
   <script src="js/auth.js"></script>        <!-- ПИН-код: строго первым -->
   <script src="js/firebase.js"></script>    <!-- db и gameRef: нужны main.js -->
   <script src="js/words-data.js"></script>  <!-- DAILY_WORDS_POOL -->
+  <script src="js/marathon-words.js"></script> <!-- MARATHON_WORDS: слова уровней марафона -->
   <script src="js/dictionary.js"></script>  <!-- строго после words-data.js: читает пул сразу -->
   <script src="js/config.js"></script>
   <script src="js/state.js"></script>       <!-- myRole: нужен main.js -->
@@ -420,6 +434,7 @@
   <script src="js/game-render.js"></script>
   <script src="js/consumables.js"></script>
   <script src="js/cases.js"></script>
+  <script src="js/marathon.js"></script>    <!-- режим «Марафон»: после game-logic.js и cases.js -->
   <script src="js/stats.js"></script>
   <script src="js/gifts.js"></script>
   <script src="js/main.js"></script>       <!-- вся инициализация: строго последним -->

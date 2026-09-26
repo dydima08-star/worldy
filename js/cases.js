@@ -122,6 +122,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       const bar = document.getElementById('case-bar');
       if (!bar) return;
       const wordObj = globalState?.words?.[activeWordId];
+      // В марафоне кейсов нет: activeWordId = MARATHON_WORD_ID в words не лежит — панель скрыта
       if (!wordObj || isGameOver(wordObj)) { bar.classList.add('hidden'); return; }
       bar.classList.remove('hidden');
       const left = casesLeft();

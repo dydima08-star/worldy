@@ -6,7 +6,8 @@
 if (window.__wordleAccessDenied) throw new Error("Неверный пин-код");
 
     function handleInput(key) {
-      const wordObj = globalState.words[activeWordId];
+      const wordObj = getActiveWord();
+      if (!wordObj) return;
       if (isGameOver(wordObj)) return;   // слово уже отгадано/закончено — ввод заблокирован
       const len = wordObj.len;
 
@@ -34,7 +35,8 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
     }
 
     function selectCell(i) {
-      const wordObj = globalState.words[activeWordId];
+      const wordObj = getActiveWord();
+      if (!wordObj) return;
       if (isGameOver(wordObj)) return;
       selectedIndex = i; renderBoard();
     }
