@@ -1,11 +1,56 @@
 // Wordle Duo — майнер монет: статус цикла работа/отдых, покупка, сбор монет, улучшения дохода и батареи.
-// Перенесено из index.html без изменений: строки 3005-3276.
+// Циклы идут сами по времени, монеты копятся без захода в игру (см. minerState).
 
 // Предохранитель: в исходнике throw при неверном ПИНе обрывал весь <script>.
 // После разбиения на файлы каждый файл обрывает себя сам — поведение то же.
 if (window.__wordleAccessDenied) throw new Error("Неверный пин-код");
 
     // ================= МАЙНЕР МОНЕТ =================
+    // Циклы «работа → отдых» идут сами по часам от cycleStartTime — заходить и запускать не нужно.
+    // Монеты за все рабочие фазы копятся и не сгорают; забрать можно в любой момент, и во время отдыха.
+    //   miner/{роль}/cycleStartTime   — начало отсчёта циклов (покупка или смена батареи)
+    //   miner/{роль}/lastCollectTime  — до какого момента доход уже учтён
+    //   miner/{роль}/accumulatedCoins — «копилка»: учтённые, но ещё не забранные монеты
+    //                                   (дробные — сюда откладывается доход при смене уровня дохода)
+
+    const HOUR_MS = 60 * 60 * 1000;
+
+    function minerRate(level) {
+      return level <= 5 ? EARNING_UPGRADES[level - 1].coinsPerHour : 40 + (level - 5);
+    }
+
+    function minerBattery(level) {
+      return BATTERY_UPGRADES[Math.min(level - 1, BATTERY_UPGRADES.length - 1)];
+    }
+
+    // Сколько мс майнер проработал от начала циклов (anchor) до момента t
+    function minerWorkedMs(anchor, t, workMs, restMs) {
+      const d = Math.max(0, t - anchor);
+      const period = workMs + restMs;
+      if (restMs <= 0) return d;
+      return Math.floor(d / period) * workMs + Math.min(d % period, workMs);
+    }
+
+    // Текущее состояние майнера: фаза, время до смены фазы, накоплено (дробное)
+    function minerState(m, now) {
+      const rate = minerRate(m.earningLevel || 1);
+      const battery = minerBattery(m.batteryLevel || 1);
+      const workMs = battery.workHours * HOUR_MS;
+      const restMs = battery.restHours * HOUR_MS;
+      const anchor = m.cycleStartTime || now;
+      const from = Math.max(anchor, m.lastCollectTime || anchor);
+
+      const worked = minerWorkedMs(anchor, now, workMs, restMs) - minerWorkedMs(anchor, from, workMs, restMs);
+      const pending = (Number(m.accumulatedCoins) || 0) + worked / HOUR_MS * rate;
+
+      const period = workMs + restMs;
+      const pos = Math.max(0, now - anchor) % period;
+      const alwaysOn = restMs <= 0;
+      const isWorking = alwaysOn || pos < workMs;
+      const timeLeft = alwaysOn ? 0 : (isWorking ? workMs - pos : period - pos);
+      return { rate, battery, pending, isWorking, alwaysOn, timeLeft };
+    }
+
     function renderMiner() {
       if (!myRole) return;
       const minerData = globalState?.miner?.[myRole] || {};
@@ -27,74 +72,26 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         return;
       }
 
-      // Вычисляем текущий доход
-      let coinsPerHour = 10;
-      if (earningLevel <= 5) {
-        coinsPerHour = EARNING_UPGRADES[earningLevel - 1].coinsPerHour;
-      } else {
-        coinsPerHour = 40 + (earningLevel - 5);
-      }
+      const st = minerState(minerData, getNow());
+      const statusEl = document.getElementById('miner-status-text');
+      statusEl.innerText = st.isWorking ? '⚡ Майнер работает' : '💤 Майнер отдыхает';
+      statusEl.style.color = st.isWorking ? '#2ecc71' : '#ff8fa3';
+      document.getElementById('miner-earnings').innerHTML =
+        `Накоплено: <b style="color:#ffd35c;">${Math.floor(st.pending)} 🪙</b> · доход ${st.rate} 🪙/час`;
 
-      // Получаем параметры батареи
-      const battery = BATTERY_UPGRADES[Math.min(batteryLevel - 1, BATTERY_UPGRADES.length - 1)];
-      const workMs = battery.workHours * 60 * 60 * 1000;
-      const restMs = battery.restHours * 60 * 60 * 1000;
+      const h = Math.floor(st.timeLeft / HOUR_MS);
+      const mnt = Math.floor((st.timeLeft % HOUR_MS) / 60000);
+      const sec = Math.floor((st.timeLeft % 60000) / 1000);
+      document.getElementById('miner-timer').innerText = st.alwaysOn
+        ? '♾️ Работает без отдыха'
+        : `⏳ ${st.isWorking ? 'До отдыха' : 'До работы'}: ${h}ч ${mnt}м ${sec}с`;
 
-      const now = getNow();
-      const startTime = minerData.cycleStartTime || now;
-      const accumulated = minerData.accumulatedCoins || 0;
-      const lastCollect = minerData.lastCollectTime || now;
-
-      // Определяем текущую фазу цикла
-      const elapsed = now - startTime;
-      let isWorking = false;
-      let timeLeft = 0;
-
-      if (elapsed < workMs) {
-        // Фаза работы
-        isWorking = true;
-        timeLeft = workMs - elapsed;
-        // База начисления — момент последнего сбора, а не начало цикла, иначе «Накоплено»
-        // показывает то, что уже выплачено.
-        const base = Math.max(startTime, lastCollect);
-        const workElapsed = Math.max(0, now - base);
-        const newAccumulated = Math.floor((workElapsed / (60 * 60 * 1000)) * coinsPerHour);
-
-        document.getElementById('miner-status-text').innerText = '⚡ Майнер работает';
-        document.getElementById('miner-status-text').style.color = '#2ecc71';
-        document.getElementById('miner-earnings').innerText = `Накоплено: ${newAccumulated} 🪙 (${coinsPerHour} 🪙/час)`;
-      } else if (elapsed < workMs + restMs) {
-        // Фаза отдыха
-        isWorking = false;
-        timeLeft = workMs + restMs - elapsed;
-
-        document.getElementById('miner-status-text').innerText = '💤 Майнер отдыхает';
-        document.getElementById('miner-status-text').style.color = '#e74c3c';
-        document.getElementById('miner-earnings').innerText = `Доход: ${coinsPerHour} 🪙/час`;
-      } else {
-        // Цикл завершён, начинаем новый
-        db.ref(`wordle_season_v1/miner/${myRole}/cycleStartTime`).set(now);
-        db.ref(`wordle_season_v1/miner/${myRole}/accumulatedCoins`).set(0);
-        db.ref(`wordle_season_v1/miner/${myRole}/lastCollectTime`).set(now);
-        renderMiner();
-        return;
-      }
-
-      const hours = Math.floor(timeLeft / (60 * 60 * 1000));
-      const mins = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
-      const secs = Math.floor((timeLeft % (60 * 1000)) / 1000);
-
-      if (isWorking) {
-        document.getElementById('miner-timer').innerText = `⏳ До отдыха: ${hours}ч ${mins}м ${secs}с`;
-      } else {
-        document.getElementById('miner-timer').innerText = `⏳ До работы: ${hours}ч ${mins}м ${secs}с`;
-      }
-
-      document.getElementById('miner-battery').innerText = `🔋 Батарея: ${battery.workHours}ч работы / ${battery.restHours}ч отдыха`;
+      document.getElementById('miner-battery').innerText = `🔋 Батарея: ${st.battery.workHours}ч работы / ${st.battery.restHours}ч отдыха`;
+      document.getElementById('btn-collect-miner').innerText = `Забрать ${Math.floor(st.pending)} 🪙`;
 
       // Рендерим улучшения
-      renderEarningUpgrades(earningLevel, myCoins, coinsPerHour);
-      renderBatteryUpgrades(batteryLevel, myCoins, battery);
+      renderEarningUpgrades(earningLevel, myCoins, st.rate);
+      renderBatteryUpgrades(batteryLevel, myCoins, st.battery);
     }
 
     function renderEarningUpgrades(currentLevel, myCoins, currentEarning) {
@@ -122,7 +119,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
             <div style="font-weight:bold;color:#fff;">💰 Уровень ${upgrade.level}</div>
             <div style="font-size:0.8rem;color:#aaa;">${currentEarning} → ${upgrade.coinsPerHour} 🪙/час</div>
           </div>
-          <button onclick="upgradeMinerEarning(${upgrade.level})" style="padding:8px 12px;background:${canAfford ? '#2ecc71' : '#555'};color:#fff;border:none;border-radius:6px;font-weight:bold;cursor:${canAfford ? 'pointer' : 'not-allowed'};" ${!canAfford ? 'disabled' : ''}>
+          <button onclick="upgradeMinerEarning(${upgrade.level})" style="width:auto;margin:0 0 0 10px;flex-shrink:0;padding:8px 12px;background:${canAfford ? '#2ecc71' : '#555'};color:#fff;border:none;border-radius:6px;font-weight:bold;cursor:${canAfford ? 'pointer' : 'not-allowed'};" ${!canAfford ? 'disabled' : ''}>
             ${upgrade.price.toLocaleString()} 🪙
           </button>
         `;
@@ -150,7 +147,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
             <div style="font-weight:bold;color:#fff;">🔋 Уровень ${upgrade.level}</div>
             <div style="font-size:0.8rem;color:#aaa;">${currentBattery.workHours}ч/${currentBattery.restHours}ч → ${upgrade.workHours}ч/${upgrade.restHours}ч</div>
           </div>
-          <button onclick="upgradeMinerBattery(${upgrade.level})" style="padding:8px 12px;background:${canAfford ? '#f39c12' : '#555'};color:#fff;border:none;border-radius:6px;font-weight:bold;cursor:${canAfford ? 'pointer' : 'not-allowed'};" ${!canAfford ? 'disabled' : ''}>
+          <button onclick="upgradeMinerBattery(${upgrade.level})" style="width:auto;margin:0 0 0 10px;flex-shrink:0;padding:8px 12px;background:${canAfford ? '#f39c12' : '#555'};color:#fff;border:none;border-radius:6px;font-weight:bold;cursor:${canAfford ? 'pointer' : 'not-allowed'};" ${!canAfford ? 'disabled' : ''}>
             ${upgrade.price.toLocaleString()} 🪙
           </button>
         `;
@@ -179,54 +176,32 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       showToast('✅ Майнер успешно куплен! Он начал работу.', 'ok');
     }
 
-    function collectMinerCoins() {
-      if (!myRole) return;
+    // Забрать накопленное — в любой момент, в т.ч. во время отдыха. Дробный остаток остаётся в копилке.
+    // Возвращает, сколько целых монет забрано (0 — нечего забирать).
+    function collectMinerCoins(silent) {
+      if (!myRole) return 0;
       const minerData = globalState?.miner?.[myRole] || {};
-      if (!minerData.purchased) return;
-
-      const earningLevel = minerData.earningLevel || 1;
-      let coinsPerHour = 10;
-      if (earningLevel <= 5) {
-        coinsPerHour = EARNING_UPGRADES[earningLevel - 1].coinsPerHour;
-      } else {
-        coinsPerHour = 40 + (earningLevel - 5);
-      }
-
-      const batteryLevel = minerData.batteryLevel || 1;
-      const battery = BATTERY_UPGRADES[Math.min(batteryLevel - 1, BATTERY_UPGRADES.length - 1)];
-      const workMs = battery.workHours * 60 * 60 * 1000;
+      if (!minerData.purchased) return 0;
 
       const now = getNow();
-      const startTime = minerData.cycleStartTime || now;
-      const lastCollectTime = minerData.lastCollectTime || 0;
-      const elapsed = now - startTime;
+      const { pending } = minerState(minerData, now);
+      const whole = Math.floor(pending);
 
-      if (elapsed >= workMs) {
-        showToast('⚠️ Майнер сейчас отдыхает! Подождите, пока он снова начнёт работать.', 'warn');
-        return;
-      }
-
-      // Начисляем только за период с последнего сбора (не с начала цикла) и не дальше конца
-      // рабочей фазы — иначе повторные нажатия «Забрать» выплачивали бы один период заново.
-      const base = Math.max(startTime, lastCollectTime);
-      const cappedNow = Math.min(now, startTime + workMs);
-      const workElapsed = Math.max(0, cappedNow - base);
-      const accumulated = Math.floor((workElapsed / (60 * 60 * 1000)) * coinsPerHour);
-
-      if (accumulated === 0) {
-        showToast('⚠️ Майнер ещё не накопил монеты. Подождите немного!', 'warn');
-        return;
+      if (whole <= 0) {
+        if (!silent) showToast('⚠️ Майнер ещё не накопил монеты. Загляните чуть позже!', 'warn');
+        return 0;
       }
 
       const myCoins = globalState?.coins?.[myRole] || 0;
       db.ref().update({
-        [`wordle_season_v1/coins/${myRole}`]: myCoins + accumulated,
-        [`wordle_season_v1/miner/${myRole}/accumulatedCoins`]: 0,
-        [`wordle_season_v1/miner/${myRole}/lastCollectTime`]: cappedNow
+        [`wordle_season_v1/coins/${myRole}`]: myCoins + whole,
+        [`wordle_season_v1/miner/${myRole}/accumulatedCoins`]: pending - whole,
+        [`wordle_season_v1/miner/${myRole}/lastCollectTime`]: now
       });
       checkAchievements();
 
-      showToast(`✅ Собрано ${accumulated} 🪙 с майнера!`, 'ok');
+      if (!silent) showToast(`✅ Собрано ${whole} 🪙 с майнера!`, 'ok');
+      return whole;
     }
 
     function upgradeMinerEarning(targetLevel) {
@@ -254,9 +229,14 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         return;
       }
 
+      // Всё, что намайнено по старой ставке, откладываем в копилку — новая ставка действует с этого момента
+      const now = getNow();
+      const { pending } = minerState(minerData, now);
       db.ref().update({
         [`wordle_season_v1/coins/${myRole}`]: myCoins - upgrade.price,
-        [`wordle_season_v1/miner/${myRole}/earningLevel`]: targetLevel
+        [`wordle_season_v1/miner/${myRole}/earningLevel`]: targetLevel,
+        [`wordle_season_v1/miner/${myRole}/accumulatedCoins`]: pending,
+        [`wordle_season_v1/miner/${myRole}/lastCollectTime`]: now
       });
 
       showToast(`✅ Доход майнера улучшен до ${upgrade.coinsPerHour} 🪙/час!`, 'ok');
@@ -277,15 +257,19 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         return;
       }
 
+      // Сначала забираем накопленное на счёт (со старой батареей), затем новый цикл начинается с работы
       const now = getNow();
+      const { pending } = minerState(minerData, now);
+      const whole = Math.floor(pending);
       db.ref().update({
-        [`wordle_season_v1/coins/${myRole}`]: myCoins - upgrade.price,
+        [`wordle_season_v1/coins/${myRole}`]: myCoins - upgrade.price + whole,
         [`wordle_season_v1/miner/${myRole}/batteryLevel`]: targetLevel,
         [`wordle_season_v1/miner/${myRole}/cycleStartTime`]: now,
-        [`wordle_season_v1/miner/${myRole}/accumulatedCoins`]: 0,
+        [`wordle_season_v1/miner/${myRole}/accumulatedCoins`]: pending - whole,
         [`wordle_season_v1/miner/${myRole}/lastCollectTime`]: now
       });
       checkAchievements();
 
-      showToast(`✅ Батарея улучшена! Теперь ${upgrade.workHours}ч работы / ${upgrade.restHours}ч отдыха.`, 'ok');
+      showToast(`✅ Батарея улучшена! Теперь ${upgrade.workHours}ч работы / ${upgrade.restHours}ч отдыха.` +
+                (whole > 0 ? ` Накопленные ${whole} 🪙 зачислены на счёт.` : ''), 'ok');
     }
