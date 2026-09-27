@@ -15,9 +15,18 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
 
     const HOUR_MS = 60 * 60 * 1000;
 
-    function minerRate(level) {
-      return level <= 5 ? EARNING_UPGRADES[level - 1].coinsPerHour : 40 + (level - 5);
+    // Уровень дохода: 1–5 из таблицы, дальше без предела (+2 🪙/ч, цена растёт на 1000)
+    function minerEarningUpgrade(level) {
+      if (level <= EARNING_UPGRADES.length) return EARNING_UPGRADES[level - 1];
+      const extra = level - EARNING_UPGRADES.length;
+      return {
+        level,
+        coinsPerHour: EARNING_UPGRADES[EARNING_UPGRADES.length - 1].coinsPerHour + extra * MINER_EXTRA_RATE,
+        price: MINER_EXTRA_PRICE_START + (extra - 1) * MINER_EXTRA_PRICE_STEP
+      };
     }
+
+    function minerRate(level) { return minerEarningUpgrade(level).coinsPerHour; }
 
     function minerBattery(level) {
       return BATTERY_UPGRADES[Math.min(level - 1, BATTERY_UPGRADES.length - 1)];
@@ -99,17 +108,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       container.innerHTML = '';
 
       for (let level = currentLevel + 1; level <= currentLevel + 3; level++) {
-        let upgrade;
-        if (level <= 5) {
-          upgrade = EARNING_UPGRADES[level - 1];
-        } else {
-          const extraCoins = level - 5;
-          upgrade = {
-            level: level,
-            coinsPerHour: 40 + extraCoins,
-            price: 55000 + (extraCoins * 10000)
-          };
-        }
+        const upgrade = minerEarningUpgrade(level);
 
         const canAfford = myCoins >= upgrade.price;
         const card = document.createElement('div');
@@ -120,7 +119,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
             <div style="font-size:0.8rem;color:#aaa;">${currentEarning} → ${upgrade.coinsPerHour} 🪙/час</div>
           </div>
           <button onclick="upgradeMinerEarning(${upgrade.level})" style="width:auto;margin:0 0 0 10px;flex-shrink:0;padding:8px 12px;background:${canAfford ? '#2ecc71' : '#555'};color:#fff;border:none;border-radius:6px;font-weight:bold;cursor:${canAfford ? 'pointer' : 'not-allowed'};" ${!canAfford ? 'disabled' : ''}>
-            ${upgrade.price.toLocaleString()} 🪙
+            ${upgrade.price.toLocaleString('ru-RU')} 🪙
           </button>
         `;
         container.appendChild(card);
@@ -148,7 +147,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
             <div style="font-size:0.8rem;color:#aaa;">${currentBattery.workHours}ч/${currentBattery.restHours}ч → ${upgrade.workHours}ч/${upgrade.restHours}ч</div>
           </div>
           <button onclick="upgradeMinerBattery(${upgrade.level})" style="width:auto;margin:0 0 0 10px;flex-shrink:0;padding:8px 12px;background:${canAfford ? '#f39c12' : '#555'};color:#fff;border:none;border-radius:6px;font-weight:bold;cursor:${canAfford ? 'pointer' : 'not-allowed'};" ${!canAfford ? 'disabled' : ''}>
-            ${upgrade.price.toLocaleString()} 🪙
+            ${upgrade.price.toLocaleString('ru-RU')} 🪙
           </button>
         `;
         container.appendChild(card);
@@ -159,7 +158,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       if (!myRole) return;
       const myCoins = globalState?.coins?.[myRole] || 0;
       if (myCoins < MINER_COST) {
-        showToast(`Недостаточно монет! Требуется ${MINER_COST.toLocaleString()} 🪙`, 'err');
+        showToast(`Недостаточно монет! Требуется ${MINER_COST.toLocaleString('ru-RU')} 🪙`, 'err');
         return;
       }
 
@@ -211,21 +210,11 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
 
       if (targetLevel !== currentLevel + 1) return;
 
-      let upgrade;
-      if (targetLevel <= 5) {
-        upgrade = EARNING_UPGRADES[targetLevel - 1];
-      } else {
-        const extraCoins = targetLevel - 5;
-        upgrade = {
-          level: targetLevel,
-          coinsPerHour: 40 + extraCoins,
-          price: 55000 + (extraCoins * 10000)
-        };
-      }
+      const upgrade = minerEarningUpgrade(targetLevel);
 
       const myCoins = globalState?.coins?.[myRole] || 0;
       if (myCoins < upgrade.price) {
-        showToast(`Недостаточно монет! Требуется ${upgrade.price.toLocaleString()} 🪙`, 'err');
+        showToast(`Недостаточно монет! Требуется ${upgrade.price.toLocaleString('ru-RU')} 🪙`, 'err');
         return;
       }
 
@@ -253,7 +242,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       const myCoins = globalState?.coins?.[myRole] || 0;
 
       if (myCoins < upgrade.price) {
-        showToast(`Недостаточно монет! Требуется ${upgrade.price.toLocaleString()} 🪙`, 'err');
+        showToast(`Недостаточно монет! Требуется ${upgrade.price.toLocaleString('ru-RU')} 🪙`, 'err');
         return;
       }
 

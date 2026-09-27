@@ -90,24 +90,28 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
     ];
 
     // УЛУЧШЕНИЯ МАЙНЕРА
-    const MINER_COST = 10000;
+    const MINER_COST = 7000;
     const EARNING_UPGRADES = [
-      { level: 1, coinsPerHour: 10, price: 0 }, // базовый уровень после покупки
-      { level: 2, coinsPerHour: 20, price: 5000 },
-      { level: 3, coinsPerHour: 30, price: 15000 },
-      { level: 4, coinsPerHour: 35, price: 30000 },
-      { level: 5, coinsPerHour: 40, price: 55000 }
-      // далее: +10000 за каждый +1 монету/час
+      { level: 1, coinsPerHour: 14, price: 0 }, // базовый уровень после покупки
+      { level: 2, coinsPerHour: 25, price: 3000 },
+      { level: 3, coinsPerHour: 36, price: 9000 },
+      { level: 4, coinsPerHour: 43, price: 18000 },
+      { level: 5, coinsPerHour: 50, price: 34000 }
     ];
+    // Уровни дохода после 5-го — без предела: +2 🪙/ч каждый, цена 7000, 8000, 9000… (см. minerEarningUpgrade)
+    const MINER_EXTRA_RATE = 2;
+    const MINER_EXTRA_PRICE_START = 7000;
+    const MINER_EXTRA_PRICE_STEP = 1000;
 
+    // Работа + отдых = 24 часа: майнер работает примерно в одни и те же часы каждый день
     const BATTERY_UPGRADES = [
-      { level: 1, workHours: 4, restHours: 24, price: 0 }, // базовый уровень
-      { level: 2, workHours: 5, restHours: 22, price: 10000 },
-      { level: 3, workHours: 6, restHours: 20, price: 20000 },
-      { level: 4, workHours: 8, restHours: 18, price: 35000 },
-      { level: 5, workHours: 12, restHours: 12, price: 50000 },
-      { level: 6, workHours: 20, restHours: 4, price: 100000 },
-      { level: 7, workHours: 24, restHours: 0, price: 155000 } // всегда работает
+      { level: 1, workHours: 4, restHours: 20, price: 0 }, // базовый уровень
+      { level: 2, workHours: 6, restHours: 18, price: 6000 },
+      { level: 3, workHours: 8, restHours: 16, price: 12000 },
+      { level: 4, workHours: 10, restHours: 14, price: 22000 },
+      { level: 5, workHours: 12, restHours: 12, price: 30000 },
+      { level: 6, workHours: 18, restHours: 6, price: 45000 },
+      { level: 7, workHours: 24, restHours: 0, price: 65000 } // всегда работает
     ];
 
     const CONSUMABLE_QTY = { cons_pack_xray: 5, cons_pack_clean: 3, cons_vowel_scan: 3 };
