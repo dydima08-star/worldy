@@ -29,19 +29,66 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       document.getElementById('profile-name-input').value = existing.name || '';
       __profileSelectedAvatar = existing.avatar || '';
 
+      // Аватары: 12 базовых + открытые уровнями (js/levels.js); закрытые — с замком и номером уровня
+      const myLevel = playerLevel(myRole);
       const grid = document.getElementById('profile-avatar-grid');
       grid.innerHTML = '';
-      PROFILE_AVATARS.forEach(a => {
+      const all = PROFILE_AVATARS.map(a => ({ avatar: a, level: 1 })).concat(levelAvatars());
+      all.forEach(({ avatar: a, level }) => {
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.innerText = a;
-        btn.className = 'avatar-btn' + (a === __profileSelectedAvatar ? ' selected' : '');
+        const locked = level > myLevel;
+        btn.className = 'avatar-btn' + (a === __profileSelectedAvatar ? ' selected' : '') + (locked ? ' locked' : '');
+        btn.innerHTML = locked ? `<span>${a}</span><small>ур. ${level}</small>` : a;
         btn.onclick = () => {
+          if (locked) { showToast(`Аватар ${a} откроется на ${level}-м уровне`, 'info'); return; }
           __profileSelectedAvatar = a;
           grid.querySelectorAll('.avatar-btn').forEach(b => b.classList.remove('selected'));
           btn.classList.add('selected');
         };
         grid.appendChild(btn);
+      });
+
+      renderProfileCosmetics(myLevel);
+    }
+
+    // Цвет имени (12/23/31 ур.) и подпись под именем (36 ур.) — см. LEVEL_REWARDS
+    let __profileNameColor = null;
+    function renderProfileCosmetics(myLevel) {
+      const box = document.getElementById('profile-cosmetics');
+      if (!box) return;
+      const cos = globalState?.cosmetics?.[myRole] || {};
+      const allowed = allowedNameColors(myLevel);
+      __profileNameColor = allowed.includes(cos.nameColor) ? cos.nameColor : null;
+
+      const swatch = (c, lvl) => {
+        const locked = lvl > myLevel;
+        const style = c === NAME_SHIMMER ? '' : `background:${c};`;
+        return `<button type="button" class="color-swatch${c === NAME_SHIMMER ? ' shimmer' : ''}${locked ? ' locked' : ''}${c === __profileNameColor ? ' selected' : ''}"
+                  data-c="${c}" data-lvl="${lvl}" style="${style}" title="${locked ? 'Уровень ' + lvl : ''}">${locked ? '🔒' : ''}</button>`;
+      };
+      const tagOpen = hasReward(myLevel, 'tagline');
+      box.innerHTML = `
+        <div class="pc-section-title">🎨 Цвет имени</div>
+        <div class="color-swatches">
+          <button type="button" class="color-swatch none${!__profileNameColor ? ' selected' : ''}" data-c="" data-lvl="1" title="Обычный">✕</button>
+          ${NAME_COLORS_1.map(c => swatch(c, 12)).join('')}
+          ${NAME_COLORS_2.map(c => swatch(c, 23)).join('')}
+          ${swatch(NAME_SHIMMER, 31)}
+        </div>
+        ${allowed.length ? '' : '<div class="pc-locked-note">Цвета открываются с 12-го уровня</div>'}
+        <div class="pc-section-title">✍️ Подпись под именем</div>
+        <input type="text" id="profile-tagline-input" maxlength="20" ${tagOpen ? '' : 'disabled'}
+          placeholder="${tagOpen ? 'До 20 символов' : '🔒 Откроется на 36-м уровне'}" value="${tagOpen ? escapeHtml(cos.tagline || '') : ''}">`;
+
+      box.querySelectorAll('.color-swatch').forEach(b => {
+        b.onclick = () => {
+          const lvl = +b.dataset.lvl;
+          if (lvl > myLevel) { showToast(`Этот цвет откроется на ${lvl}-м уровне`, 'info'); return; }
+          __profileNameColor = b.dataset.c || null;
+          box.querySelectorAll('.color-swatch').forEach(x => x.classList.remove('selected'));
+          b.classList.add('selected');
+        };
       });
     }
 
@@ -57,6 +104,12 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       const updates = {};
       if (name) updates[`wordle_season_v1/players/${myRole}/name`] = name;
       if (__profileSelectedAvatar) updates[`wordle_season_v1/players/${myRole}/avatar`] = __profileSelectedAvatar;
+      // Косметика уровня: пишем только то, что открыто (при первом входе раздела ещё нет)
+      if (document.getElementById('profile-cosmetics')?.innerHTML) {
+        updates[`wordle_season_v1/cosmetics/${myRole}/nameColor`] = __profileNameColor || null;
+        const tagInput = document.getElementById('profile-tagline-input');
+        if (tagInput && !tagInput.disabled) updates[`wordle_season_v1/cosmetics/${myRole}/tagline`] = tagInput.value.trim().slice(0, 20) || null;
+      }
       if (Object.keys(updates).length) db.ref().update(updates);
       closeProfileModal();
     }
@@ -107,7 +160,6 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         const rp = data.rp?.[p] || 0;
         const rank = getRankByRP(rp);
 
-        document.getElementById(`p${p}-name`).innerText = `${playerAvatar(p)} ${playerName(p)}`;
         document.getElementById(`p${p}-rp`).innerHTML = `<span style="color: ${rank.color};">${rank.icon} ${rp} RP</span>`;
         document.getElementById(`p${p}-score`).innerText = data.score?.[p] || 0;
         document.getElementById(`p${p}-coins`).innerText = `${data.coins?.[p] || 0} 🪙`;
@@ -130,6 +182,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         card.style.boxShadow = lord ? '0 0 12px rgba(155,89,182,0.6)' : (gold ? '0 0 10px rgba(255,215,0,0.45)' : '');
       });
 
+      renderPlayerLevels();
       renderMenuStatus(data);
       renderWords(data.words || {});
       if (!screenShop.classList.contains('hidden')) renderShop();
@@ -137,4 +190,6 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       if (!screenMarathon.classList.contains('hidden')) renderMarathon();
       if (!screenMiner.classList.contains('hidden')) renderMiner();
       if (!document.getElementById('screen-history').classList.contains('hidden')) renderHistory();
+      if (!document.getElementById('screen-levels').classList.contains('hidden')) renderLevels(false);
+      checkLevelUp();
     }

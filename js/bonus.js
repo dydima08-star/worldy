@@ -153,6 +153,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         updates[`wordle_season_v1/boosts/${myRole}`] = { mult: win.val, until: boostUntil };
       }
       db.ref().update(updates);
+      addXP(myRole, XP_RULES.chest);
 
       // 2) Анимация: тряска → переворот выбранного → через паузу открываются остальные
       fillChestBack(picked, win);
@@ -169,7 +170,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
 
       setTimeout(() => {
         chests.filter(c => c !== picked).forEach(c => c.classList.add('open', 'missed'));
-        document.getElementById('bonus-prize-label').innerText = win.label;
+        document.getElementById('bonus-prize-label').innerText = `${win.label} · +${XP_RULES.chest} ✨`;
         document.getElementById('bonus-prize').classList.remove('hidden');
         isSpinning = false;
       }, 1700);

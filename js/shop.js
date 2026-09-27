@@ -123,6 +123,8 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       if (isActiveById('week_lord_title')) { coinMult *= 1.10; pointMult *= 1.10; }
       if (isActiveById('day_night_fever') && new Date().getHours() >= 20) pointMult *= 1.5;
       if (isActiveById('day_morning_boost') && new Date().getHours() < 12) pointMult *= 1.5;
+      // Бонус уровня игрока (+4/6/10% с 20/30/40-го, js/levels.js) — только к очкам, не к RP
+      if (myRole) pointMult *= 1 + levelPointBonus(playerLevel(myRole)) / 100;
       return { coinMult, pointMult };
     }
 

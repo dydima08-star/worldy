@@ -593,3 +593,138 @@
     @media (prefers-reduced-motion: reduce) { .chest { animation: none; } }
     .chest-row.spent .chest-hint { visibility: hidden; }
     #bonus-timer-box { margin-bottom: 14px; }
+
+/* =====================================================================
+   УРОВНИ ИГРОКА (js/levels.js)
+   ===================================================================== */
+    /* Карточка игрока: значок уровня, титул, подпись, полоска опыта */
+    .player-card { cursor: pointer; }
+    .player-level { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px; margin-top: 4px; min-height: 18px; }
+    .lvl-badge { font-size: 0.66rem; font-weight: 800; padding: 1px 7px; border-radius: 999px; background: rgba(255,255,255,0.14); color: #fff; letter-spacing: 0.3px; }
+    .lvl-badge-color { background: linear-gradient(135deg, #8f7bff, #ff6fb5); }
+    .lvl-badge-anim { background: linear-gradient(90deg, #ff6fb5, #ffd86b, #5fd4ff, #8f7bff, #ff6fb5); background-size: 300% 100%; animation: badge-flow 3s linear infinite; }
+    @keyframes badge-flow { to { background-position: 300% 0; } }
+    .lvl-title { font-size: 0.66rem; font-weight: 700; color: #ffe29a; }
+    .pc-tagline { width: 100%; font-size: 0.66rem; font-style: italic; color: rgba(255,255,255,0.7); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pc-avatar.glow { display: inline-flex; align-items: center; justify-content: center; width: 1.6em; height: 1.6em; border-radius: 50%; box-shadow: 0 0 10px 3px rgba(255,230,120,0.75); background: rgba(255,230,120,0.18); vertical-align: middle; }
+    .player-xp { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: rgba(255,255,255,0.08); border-radius: 0 0 18px 18px; overflow: hidden; }
+    .player-xp i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #8f7bff, #ff6fb5); border-radius: 0 4px 4px 0; transition: width 0.6s ease; }
+
+    .name-shimmer {
+      background: linear-gradient(90deg, #ff6fb5, #ffd86b, #7dffa8, #5fd4ff, #c9a2ff, #ff6fb5); background-size: 300% 100%;
+      -webkit-background-clip: text; background-clip: text; color: transparent; animation: badge-flow 4s linear infinite;
+    }
+
+    /* Рамки карточки по уровню. Покупные «Золотой статус»/«Титул Лорда» задают инлайн-стиль и остаются главнее. */
+    .player-card.frame-bronze  { border: 2px solid #cd8a4f; }
+    .player-card.frame-silver  { border: 2px solid #d8e0ea; }
+    .player-card.frame-gold    { border: 2px solid #ffd35c; }
+    .player-card.frame-crystal { border: 2px solid #9fe8ff; box-shadow: var(--glass-shadow), inset 0 0 14px rgba(159,232,255,0.35); }
+    /* Радужная рамка — псевдоэлементом с маской: градиент под полупрозрачной карточкой просвечивал бы целиком */
+    .player-card.frame-rainbow { border-color: transparent; }
+    .player-card.frame-rainbow::before {
+      content: ''; position: absolute; inset: -2px; border-radius: inherit; padding: 2px; pointer-events: none;
+      background: linear-gradient(120deg, #ff6fb5, #ffd86b, #7dffa8, #5fd4ff, #c9a2ff, #ff6fb5); background-size: 300% 300%;
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude; animation: frame-flow 5s linear infinite;
+    }
+    @keyframes frame-flow { to { background-position: 300% 0; } }
+    .player-card.card-glow { box-shadow: var(--glass-shadow), 0 0 18px rgba(143,123,255,0.55); }
+
+    /* Полоса уровня в главном меню */
+    .level-strip {
+      width: 100%; margin: 0 0 12px; padding: 10px 12px; display: flex; align-items: center; gap: 12px; text-align: left;
+      border-radius: 18px; background: var(--card-bg); border: 1px solid var(--border-color); box-shadow: var(--glass-shadow);
+      backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+    }
+    .level-strip:hover { background: rgba(40, 22, 84, 0.6); }
+    .level-strip-num {
+      flex: 0 0 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 1.15rem; font-weight: 900; background: linear-gradient(135deg, #ffd86b, #ff9f1c); color: #3a2000;
+      box-shadow: 0 0 0 3px rgba(255,216,107,0.25), 0 4px 12px rgba(255,159,28,0.4);
+    }
+    .level-strip-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+    .level-strip-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 0.85rem; font-weight: 600; }
+    .level-strip-top > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .level-strip-top b { font-weight: 800; }
+    .level-strip-xp { align-self: flex-end; margin-top: -2px; font-size: 0.72rem; color: #d8d0ff; white-space: nowrap; }
+    .level-strip-go { font-size: 1.5rem; color: rgba(255,255,255,0.7); line-height: 1; }
+    .lv-bar { display: block; height: 8px; border-radius: 999px; background: rgba(255,255,255,0.12); overflow: hidden; }
+    .lv-bar i { display: block; height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, #ffd86b, #ff6fb5, #8f7bff); transition: width 0.6s ease; }
+
+    /* Экран «Уровни»: шапка с кольцом прогресса */
+    .lv-hero { display: flex; align-items: center; gap: 14px; padding: 12px; border-radius: 16px; background: var(--surface-1); }
+    .lv-ring {
+      flex: 0 0 92px; height: 92px; border-radius: 50%; padding: 7px;
+      background: conic-gradient(#ffd86b 0%, #ff6fb5 calc(var(--pct) * 0.5%), #8f7bff calc(var(--pct) * 1%), rgba(255,255,255,0.12) calc(var(--pct) * 1%));
+    }
+    .lv-ring-inner { width: 100%; height: 100%; border-radius: 50%; background: rgba(28, 14, 60, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .lv-ring-inner small { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; color: #bbb; }
+    .lv-ring-inner b { font-size: 1.9rem; font-weight: 900; line-height: 1; }
+    .lv-hero-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; text-align: left; }
+    .lv-hero-name { font-weight: 800; font-size: 1rem; }
+    .lv-hero-title { font-size: 0.82rem; color: #ffe29a; font-weight: 700; }
+    .lv-hero-xp { font-size: 0.8rem; color: #ddd; }
+    .lv-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+    .lv-chip { font-size: 0.72rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,0.09); color: #eee; }
+
+    .lv-howto { margin-bottom: 10px; border-radius: 14px; background: var(--surface-1); padding: 10px 12px; text-align: left; }
+    .lv-howto summary { cursor: pointer; font-weight: 800; font-size: 0.88rem; }
+    .lv-howto-grid { display: grid; grid-template-columns: 1fr auto; gap: 5px 12px; margin-top: 10px; font-size: 0.8rem; color: #ddd; }
+    .lv-howto-grid b { color: #ffe29a; text-align: right; }
+    .lv-howto-note { margin-top: 8px; font-size: 0.72rem; color: #aaa; line-height: 1.35; }
+
+    /* Лестница уровней */
+    .lv-ladder { display: flex; flex-direction: column; gap: 6px; }
+    .lv-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; background: var(--surface-1); border: 1px solid rgba(255,255,255,0.08); text-align: left; }
+    .lv-num { flex: 0 0 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.9rem; background: rgba(255,255,255,0.1); }
+    .lv-info { flex: 1; min-width: 0; }
+    .lv-row-title { font-weight: 900; font-size: 0.9rem; color: #ffe29a; margin-bottom: 2px; }
+    .lv-rewards { font-size: 0.76rem; color: #eee; line-height: 1.35; }
+    .lv-need { font-size: 0.66rem; color: #999; margin-top: 2px; }
+    .lv-state { flex: 0 0 22px; text-align: center; font-weight: 900; }
+    .lv-row.passed { background: rgba(46, 204, 113, 0.12); border-color: rgba(46, 204, 113, 0.4); }
+    .lv-row.passed .lv-num { background: linear-gradient(135deg, #3fd47a, #1fa65a); }
+    .lv-row.passed .lv-state { color: #7dffa8; }
+    .lv-row.current { background: rgba(255, 216, 107, 0.14); border-color: #ffd86b; box-shadow: 0 0 14px rgba(255, 216, 107, 0.35); }
+    .lv-row.current .lv-num { background: linear-gradient(135deg, #ffd86b, #ff9f1c); color: #3a2000; }
+    .lv-row.current .lv-state { color: #ffd86b; }
+    .lv-row.locked { opacity: 0.62; }
+    .lv-row.milestone { background-image: linear-gradient(120deg, rgba(143,123,255,0.22), rgba(255,111,181,0.14)); }
+    .lv-row.milestone .lv-num { width: 40px; height: 40px; flex-basis: 40px; font-size: 1rem; box-shadow: 0 0 0 2px rgba(255,226,154,0.5); }
+
+    /* Окно «Новый уровень» */
+    .levelup-modal { position: relative; overflow: hidden; }
+    .levelup-badge {
+      width: 96px; height: 96px; margin: 4px auto 10px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #ffd86b, #ff6fb5 55%, #8f7bff); box-shadow: 0 0 0 6px rgba(255,255,255,0.12), 0 0 40px rgba(255,180,90,0.6);
+      animation: levelup-pop 0.6s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+    }
+    .levelup-badge span { font-size: 2.6rem; font-weight: 900; color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+    @keyframes levelup-pop { from { transform: scale(0.3) rotate(-20deg); opacity: 0; } to { transform: none; opacity: 1; } }
+    .levelup-sub { color: #ffe29a; font-weight: 700; margin: 4px 0 12px; }
+    .levelup-rewards { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; max-height: 40vh; overflow-y: auto; }
+    .levelup-reward { padding: 8px 12px; border-radius: 12px; background: rgba(255,255,255,0.08); font-weight: 700; font-size: 0.9rem; text-align: left; animation: prize-in 0.35s ease-out both; }
+    .levelup-reward.coins { background: rgba(255, 211, 92, 0.16); color: #ffe29a; }
+
+    /* Конфетти в модалках (результат слова, новый уровень) */
+    .confetti-box { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 5; }
+    .confetti-box i { position: absolute; top: -12px; width: 7px; height: 11px; border-radius: 2px; animation: conf-fall 1.6s ease-in forwards; }
+    .confetti-box i.star { width: auto; height: auto; font-style: normal; font-size: 14px; line-height: 1; }
+
+    /* Профиль: закрытые аватары, цвета имени, подпись */
+    .modal { max-height: calc(100vh - 40px); overflow-y: auto; }
+    .avatar-btn.locked { position: relative; opacity: 0.55; filter: grayscale(0.7); display: inline-flex; flex-direction: column; align-items: center; padding: 6px 8px 4px; }
+    .avatar-btn.locked small { font-size: 0.55rem; font-weight: 800; color: #ffe29a; filter: none; }
+    .profile-cosmetics { text-align: left; margin-bottom: 14px; }
+    .pc-section-title { font-size: 0.8rem; font-weight: 800; color: #ddd; margin: 10px 0 6px; }
+    .color-swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+    .color-swatch { width: 32px; height: 32px; margin: 0; padding: 0; border-radius: 50%; border: 2px solid rgba(255,255,255,0.25); box-shadow: none; font-size: 0.75rem; }
+    .color-swatch:hover { filter: brightness(1.1); }
+    .color-swatch.none { background: rgba(255,255,255,0.1); color: #bbb; }
+    .color-swatch.shimmer { background: linear-gradient(135deg, #ff6fb5, #ffd86b, #7dffa8, #5fd4ff, #c9a2ff); }
+    .color-swatch.locked { opacity: 0.4; }
+    .color-swatch.selected { border-color: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,0.35); }
+    .pc-locked-note { font-size: 0.72rem; color: #aaa; margin-top: 6px; }
+    #profile-tagline-input { width: 100%; padding: 10px; background: var(--surface-2); }
+    #profile-tagline-input:disabled { opacity: 0.55; }

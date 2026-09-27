@@ -123,6 +123,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       document.getElementById('result-modal').classList.add('hidden');
       document.getElementById('result-next-btn').classList.add('hidden');
       startMarathon();
+      flushLevelUp();
     }
 
     // Заголовок над полем во время уровня
@@ -167,6 +168,8 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         updates[`${base}/status`] = 'failed';
       }
       db.ref().update(updates);
+      const xpGain = isWin ? XP_RULES.marathonBase + level : XP_RULES.loss;
+      addXP(myRole, xpGain);
 
       const earnedTotal = (st?.earned || 0) + reward;
       const nextBtn = document.getElementById('result-next-btn');
@@ -176,6 +179,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         document.getElementById('result-desc').innerHTML =
           `Слово было: <b>${wordObj.secret}</b><br><br>` +
           `Награда: <b>+${reward} 🎯</b><br>` +
+          xpResultLine(xpGain) +
           `За сегодня: <b>${earnedTotal} 🎯</b><br><br>` +
           `Дальше — уровень ${level + 1}: ${next.len} ${lettersWord(next.len)}, ${next.tier}, +${next.reward} 🎯`;
         nextBtn.innerText = `▶️ Уровень ${level + 1}`;
@@ -185,6 +189,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         document.getElementById('result-desc').innerHTML =
           `Все ${MARATHON_TOTAL} уровней за день!<br>Последнее слово: <b>${wordObj.secret}</b><br><br>` +
           `Награда: <b>+${reward} 🎯</b><br>` +
+          xpResultLine(xpGain) +
           `За сегодня: <b>${earnedTotal} 🎯</b>`;
         nextBtn.classList.add('hidden');
         showToast('🏆 Марафон пройден целиком!', 'ok');
@@ -193,12 +198,14 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         document.getElementById('result-desc').innerHTML =
           `Слово было: <b>${wordObj.secret}</b><br><br>` +
           `Пройдено уровней: <b>${level - 1}/${MARATHON_TOTAL}</b><br>` +
-          `Заработано сегодня: <b>${earnedTotal} 🎯</b><br><br>` +
+          `Заработано сегодня: <b>${earnedTotal} 🎯</b><br>` +
+          xpResultLine(xpGain) + `<br>` +
           `<span style="font-size:0.8rem;color:#888;">Новый марафон — завтра в 00:00</span>`;
         nextBtn.classList.add('hidden');
       }
       document.getElementById('result-close-btn').innerText = '♾️ К марафону';
       document.getElementById('result-modal').classList.remove('hidden');
+      if (isWin) winConfetti();
       renderBoard();
       renderCaseBar();
     }

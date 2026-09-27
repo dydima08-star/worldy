@@ -18,8 +18,11 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       return c.used || 0;
     }
 
+    // Кейсы «в запасе» — награда уровней 19 и 34 (js/levels.js); тратятся после суточных
+    function caseBonusLeft() { return Math.max(0, Number(globalState?.caseBonus?.[myRole]) || 0); }
+
     function casesLeft() {
-      return Math.max(0, DAILY_CASES - casesUsedToday());
+      return Math.max(0, DAILY_CASES - casesUsedToday()) + caseBonusLeft();
     }
 
     // ================= ПУЛ БУКВ =================
@@ -225,10 +228,9 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       // Запись в БД сразу, до анимации: если вкладка закроется посреди прокрута, результат не потеряется.
       const usedToday = casesUsedToday();
       const hintsPatch = mergeCaseHintsPatch(activeWordId, drops);
-      const updates = {
-        [`wordle_season_v1/cases/${myRole}`]: { date: getToday(), used: usedToday + 1 },
-        [`wordle_season_v1/caseHints/${myRole}/${activeWordId}`]: hintsPatch
-      };
+      const updates = { [`wordle_season_v1/caseHints/${myRole}/${activeWordId}`]: hintsPatch };
+      if (usedToday < DAILY_CASES) updates[`wordle_season_v1/cases/${myRole}`] = { date: getToday(), used: usedToday + 1 };
+      else updates[`wordle_season_v1/caseBonus/${myRole}`] = caseBonusLeft() - 1;
       if (drops.length >= 3) updates[`wordle_season_v1/caseJackpot/${myRole}`] = true; // для достижения "Джекпот"
       db.ref().update(updates);
 

@@ -251,6 +251,12 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
         if (shieldUsedToday) updates[`wordle_season_v1/comboShield/${myRole}`] = shieldUsedToday;
         if (newBlitzCount !== null) updates[`wordle_season_v1/lastBlitz/${myRole}`] = { date: getToday(), count: newBlitzCount };
         db.ref().update(updates);
+
+        // Опыт (js/levels.js): себе за слово, автору — за то, что его слово доиграли
+        const isDaily = wordObj.author === 'Система';
+        const xpGain = xpForWord(wordObj.len, attempts.length, isWin, isDaily);
+        addXP(myRole, xpGain);
+        if (typeof wordObj.author === 'number' && wordObj.author !== myRole) addXP(wordObj.author, XP_RULES.authorFinished);
         checkAchievements();
 
         document.getElementById('result-title').innerText = isWin ? '🎉 Победа!' : '❌ Поражение!';
@@ -259,10 +265,12 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
           `Рейтинг: <b>${rpChange > 0 ? '+' + rpChange : rpChange} RP</b><br>` +
           `Очки: <b>+${pointsEarned} 🎯</b><br>` +
           `🔥 Комбо: <b>${newCombo}/5</b><br>` +
+          xpResultLine(xpGain) +
           (ms !== null ? `⏱ Время: <b>${formatDuration(ms)}</b><br>` : '') +
           (blitzCoins > 0 ? `⚡ Блиц: <b>+${blitzCoins} 🪙</b><br>` : '') +
           `<span style="font-size:0.8rem;color:#888;">Монеты добываются обменом очков в магазине 💱</span>`;
         document.getElementById('result-modal').classList.remove('hidden');
+        if (isWin) winConfetti();
         renderBoard();
         renderCaseBar();
       } else {
@@ -278,6 +286,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       activeWordId = null;
       if (fromMarathon) openMarathon();
       else showScreen(screenMenu);
+      flushLevelUp();   // окно «Новый уровень», отложенное до закрытия результата (js/levels.js)
     }
 
     // Форматирует длительность партии (ms) для модалки результата и истории матчей

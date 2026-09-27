@@ -42,9 +42,10 @@
     </div>
 
     <div class="scoreboard">
-      <div id="p1-card" class="player-card">
+      <div id="p1-card" class="player-card" onclick="openLevels()">
         <div id="p1-crown" class="crown">👑</div>
         <div id="p1-name" class="player-name">Игрок 1</div>
+        <div id="p1-level" class="player-level"></div>
         <div id="p1-rp" class="player-rp">0 RP</div>
         <div class="player-stats">
           <span class="player-score"><span id="p1-score">0</span> 🎯</span>
@@ -54,11 +55,13 @@
           <span id="p1-combo" class="player-combo">🔥 Комбо: 0/5</span>
           <span id="p1-streak" class="player-combo">📆 Серия: 0 дн.</span>
         </div>
+        <div class="player-xp"><i id="p1-xpbar"></i></div>
       </div>
       <div class="vs-badge">VS</div>
-      <div id="p2-card" class="player-card">
+      <div id="p2-card" class="player-card" onclick="openLevels()">
         <div id="p2-crown" class="crown">👑</div>
         <div id="p2-name" class="player-name">Игрок 2</div>
+        <div id="p2-level" class="player-level"></div>
         <div id="p2-rp" class="player-rp">0 RP</div>
         <div class="player-stats">
           <span class="player-score"><span id="p2-score">0</span> 🎯</span>
@@ -68,6 +71,7 @@
           <span id="p2-combo" class="player-combo">🔥 Комбо: 0/5</span>
           <span id="p2-streak" class="player-combo">📆 Серия: 0 дн.</span>
         </div>
+        <div class="player-xp"><i id="p2-xpbar"></i></div>
       </div>
     </div>
 
@@ -78,6 +82,16 @@
 
   <!-- ГЛАВНОЕ МЕНЮ: два главных режима крупно, остальное — плитки 3×2 -->
   <div id="screen-menu" class="screen">
+    <button id="btn-go-levels" class="level-strip" onclick="openLevels()">
+      <span class="level-strip-num" id="menu-level-num">1</span>
+      <span class="level-strip-body">
+        <span class="level-strip-top"><span id="menu-level-text"><b>Уровень 1</b></span></span>
+        <span class="lv-bar"><i id="menu-level-bar"></i></span>
+        <span id="menu-level-xp" class="level-strip-xp"></span>
+      </span>
+      <span class="level-strip-go">›</span>
+    </button>
+
     <div class="menu-hero">
       <button id="btn-daily-word" onclick="startDailyWord()" class="hero-tile hero-daily">
         <span class="hero-icon">📅</span>
@@ -277,6 +291,33 @@
     </div>
   </div>
 
+  <!-- УРОВНИ ИГРОКА: см. js/levels.js -->
+  <div id="screen-levels" class="screen hidden">
+    <div class="menu-box" style="padding: 14px;">
+      <h3 style="text-align: center; margin-bottom: 12px;">⭐ Уровни</h3>
+      <div id="levels-hero"></div>
+
+      <details class="lv-howto">
+        <summary>✨ Как получать опыт</summary>
+        <div class="lv-howto-grid">
+          <span>Отгадал слово</span><b>10 + 2 за букву</b>
+          <span>…с 1–2 попытки</span><b>+10</b>
+          <span>…с 3-й попытки</span><b>+5</b>
+          <span>Не отгадал</span><b>3</b>
+          <span>Слово дня</span><b>+15 сверху</b>
+          <span>Уровень марафона</span><b>5 + № уровня</b>
+          <span>Соперник доиграл твоё слово</span><b>3</b>
+          <span>Сундук дня</span><b>10</b>
+          <span>Новое достижение</span><b>50</b>
+        </div>
+        <p class="lv-howto-note">Уровень не сбрасывается в конце сезона. Опыт нельзя потратить — он только копится.</p>
+      </details>
+
+      <div id="levels-ladder" class="lv-ladder"></div>
+      <button onclick="showScreen(screenMenu)" class="secondary" style="margin-top: 12px;">⬅️ Вернуться в меню</button>
+    </div>
+  </div>
+
   <!-- МАЙНЕР МОНЕТ -->
   <div id="screen-miner" class="screen hidden">
     <div class="menu-box" style="padding: 16px;">
@@ -319,6 +360,7 @@
         <input type="text" id="profile-name-input" maxlength="16" placeholder="Имя (необязательно)"
           style="width:100%; padding:10px; margin-bottom:12px; background:var(--surface-2); color:white; border:1px solid var(--border-color); border-radius:8px; text-align:center; box-sizing:border-box;">
         <div id="profile-avatar-grid" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:15px;"></div>
+        <div id="profile-cosmetics" class="profile-cosmetics"></div>
         <button id="profile-save-btn" onclick="saveProfile()">Готово</button>
         <button onclick="skipProfile()" class="secondary">Позже</button>
       </div>
@@ -326,7 +368,8 @@
   </div>
 
   <div id="result-modal" class="modal-overlay hidden">
-    <div class="modal">
+    <div class="modal" style="position:relative; overflow:hidden;">
+      <div id="result-confetti" class="confetti-box"></div>
       <h2 id="result-title"></h2>
       <p id="result-desc" style="margin: 15px 0; color:#ccc;"></p>
       <button id="result-next-btn" onclick="marathonNext()" class="gold hidden">▶️ Следующий уровень</button>
@@ -396,6 +439,18 @@
     </div>
   </div>
 
+  <!-- НОВЫЙ УРОВЕНЬ -->
+  <div id="levelup-modal" class="modal-overlay hidden" style="z-index:150;">
+    <div class="modal levelup-modal">
+      <div id="levelup-confetti" class="confetti-box"></div>
+      <div class="levelup-badge"><span id="levelup-num">2</span></div>
+      <h2 id="levelup-title">Уровень 2!</h2>
+      <p id="levelup-sub" class="levelup-sub"></p>
+      <div id="levelup-rewards" class="levelup-rewards"></div>
+      <button onclick="closeLevelUp()" class="gold">🎉 Забрать</button>
+    </div>
+  </div>
+
   <!-- МОДАЛКА ПОДАРКА МОНЕТ -->
   <div id="gift-modal" class="modal-overlay hidden">
     <div class="modal" style="max-width: 400px;">
@@ -460,6 +515,7 @@
   <script src="js/game-render.js"></script>
   <script src="js/consumables.js"></script>
   <script src="js/cases.js"></script>
+  <script src="js/levels.js"></script>      <!-- уровень игрока: опыт, награды, экран «Уровни» -->
   <script src="js/marathon.js"></script>    <!-- режим «Марафон»: после game-logic.js и cases.js -->
   <script src="js/stats.js"></script>
   <script src="js/gifts.js"></script>

@@ -125,6 +125,7 @@ if (window.__wordleAccessDenied) throw new Error("Неверный пин-код
       db.ref().update(updates);
 
       if (!firstRun) {
+        addXP(myRole, XP_RULES.achievement * Object.keys(updates).length);   // js/levels.js
         Object.keys(updates).forEach(path => {
           const id = path.split('/').pop();
           const def = ACHIEVEMENTS.find(x => x.id === id);
